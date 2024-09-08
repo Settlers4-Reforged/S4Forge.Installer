@@ -16,7 +16,7 @@ namespace ForgeUpdater.Updater {
         private TManifest TargetManifest { get; }
 
         public ResourceDownloader(TManifest? from, TManifest to) {
-            if (string.IsNullOrEmpty(to.DownloadUrl))
+            if (string.IsNullOrEmpty(to.Url))
                 throw new ArgumentException("Manifest does not have a download URL.");
 
             if (from != null && to.Id != from.Id)
@@ -197,13 +197,18 @@ namespace ForgeUpdater.Updater {
             try {
                 string remoteChecksum = client.GetStringAsync(ChecksumURI).Result;
 
-                SHA1 sha1 = SHA1.Create();
-                using FileStream fileStream = File.OpenRead(TargetZipPath);
-                byte[] localChecksum = sha1.ComputeHash(fileStream);
-                return string.Equals(BitConverter.ToString(localChecksum).Replace("-", string.Empty), remoteChecksum, StringComparison.InvariantCultureIgnoreCase);
-            } catch (Exception e) {
-                UpdaterLogger.LogError(e, "Failed to download checksum for %s", Name);
-                return false;
+                try {
+                    SHA1 sha1 = SHA1.Create();
+                    using FileStream fileStream = File.OpenRead(TargetZipPath);
+                    byte[] localChecksum = sha1.ComputeHash(fileStream);
+                    return string.Equals(BitConverter.ToString(localChecksum).Replace("-", string.Empty), remoteChecksum, StringComparison.InvariantCultureIgnoreCase);
+                } catch (Exception e) {
+                    UpdaterLogger.LogError(e, "Failed to verify checksum for %s", Name);
+                    return false;
+                }
+            } catch (Exception) {
+                UpdaterLogger.LogWarn("Failed to download checksum for %s", Name);
+                return true;
             }
         }
 

@@ -38,12 +38,6 @@ public record Manifest {
     public string? ManifestUrl { get; set; }
 
     /// <summary>
-    /// The URL for downloading the resource.
-    /// </summary>
-    [JsonPropertyName("download")]
-    public string? DownloadUrl { get; set; }
-
-    /// <summary>
     /// A list of files or folders that should be ignored when updating/deleting/verifying this resource.
     /// </summary>
     public string[]? IgnoredEntries { get; set; }
