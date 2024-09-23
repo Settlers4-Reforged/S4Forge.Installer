@@ -42,7 +42,7 @@ namespace ForgeUpdaterTests {
         [Test]
         public void InstallFromLocalTest() {
             const string testPath = "Test/Install";
-            const string zipPath = "Fixture/S4Forge.1.0.0.zip";
+            const string zipPath = "Fixture/Zips/S4Forge.1.0.0.zip";
 
             // Prepare
             try {
@@ -70,7 +70,7 @@ namespace ForgeUpdaterTests {
             Assert.That(Directory.Exists(testPath), Is.True);
             Assert.That(File.Exists(Path.Combine(testPath, "S4Forge.dll")), Is.True);
             Assert.That(File.Exists(Path.Combine(testPath, "S4Forge.pdb")), Is.True);
-            Assert.That(progressCount, Is.EqualTo(2));
+            Assert.That(progressCount, Is.EqualTo(3));
 
             try {
                 Directory.Delete(testPath, true);
@@ -80,7 +80,7 @@ namespace ForgeUpdaterTests {
         [Test]
         public void InstallFromLocalTestWithResiduals() {
             const string testPath = "Test/Install-Residual";
-            const string zipPath = "Fixture/S4Forge.1.0.0.zip";
+            const string zipPath = "Fixture/Zips/S4Forge.1.0.0.zip";
 
             // Prepare
             try {
@@ -119,7 +119,7 @@ namespace ForgeUpdaterTests {
         [Test]
         public void UpdateFromLocalTest() {
             const string testPath = "Test/Update";
-            const string zipPath = "Fixture/S4Forge.1.0.0.zip";
+            const string zipPath = "Fixture/Zips/S4Forge.1.0.0.zip";
 
             // Prepare
             try {
@@ -184,7 +184,7 @@ namespace ForgeUpdaterTests {
                 Id = "S4Forge",
                 Name = "S4Forge",
                 Version = new ManifestVersion("1.0.0"),
-                Url = "https://gitlab.settlers4-hd.com/s4-plugins/modapi/s4forgeupdater/-/raw/main/ForgeUpdaterTests/Fixture/",
+                Url = "https://gitlab.settlers4-hd.com/s4-plugins/modapi/s4forgeupdater/-/raw/main/ForgeUpdaterTests/Fixture/Zips/",
                 Type = "test",
             };
 

@@ -26,13 +26,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Fixture\" />
+    <None Update="Fixture\Zips\S4Forge.1.0.0.zip">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Fixture\S4Forge.1.0.0.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <Folder Include="Fixture\Stores\Simple\" />
   </ItemGroup>
 
 </Project>
