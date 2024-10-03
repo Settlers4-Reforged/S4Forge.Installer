@@ -1,0 +1,7 @@
+﻿{
+  "name": "Plugins",
+  "keep_residual_files": true,
+  "install_into_folders": true,
+  "remote_store_paths": [ "./remoteStore.json" ],
+  "installation_path": "../Files/"
+}

@@ -40,7 +40,7 @@ namespace ForgeUpdaterTests {
         }
 
         [Test]
-        public void InstallFromLocalTest() {
+        public async Task InstallFromLocalTest() {
             const string testPath = "Test/Install";
             const string zipPath = "Fixture/Zips/S4Forge.1.0.0.zip";
 
@@ -51,18 +51,20 @@ namespace ForgeUpdaterTests {
 
             Directory.CreateDirectory(testPath);
 
-
             Manifest manifest = new Manifest() {
                 Id = "S4Forge",
                 Name = "S4Forge",
                 Version = new ManifestVersion("1.0.0"),
                 Type = "test",
                 ClearResidualFiles = false,
+                Assets = new ManifestDownload() {
+                    AssetURI = zipPath
+                }
             };
 
             // Run
             int progressCount = 0;
-            foreach (var progress in UpdatePipeline<Manifest>.InstallFromLocal(manifest, zipPath, testPath)) {
+            await foreach (var progress in UpdatePipeline<Manifest>.UpdateFromLocal(null, manifest, testPath, zipPath)) {
                 progressCount++;
             }
 
@@ -78,7 +80,7 @@ namespace ForgeUpdaterTests {
         }
 
         [Test]
-        public void InstallFromLocalTestWithResiduals() {
+        public async Task InstallFromLocalTestWithResiduals() {
             const string testPath = "Test/Install-Residual";
             const string zipPath = "Fixture/Zips/S4Forge.1.0.0.zip";
 
@@ -98,10 +100,13 @@ namespace ForgeUpdaterTests {
                 Type = "test",
                 IgnoredEntries = new[] { "s4forge-important.txt" },
                 ClearResidualFiles = true,
+                Assets = new ManifestDownload() {
+                    AssetURI = zipPath
+                }
             };
 
             // Run
-            foreach (var progress in UpdatePipeline<Manifest>.InstallFromLocal(manifest, zipPath, testPath)) { }
+            await foreach (var progress in UpdatePipeline<Manifest>.UpdateFromLocal(null, manifest, testPath, zipPath)) { }
 
             // Assert
             Assert.That(Directory.Exists(testPath), Is.True);
@@ -117,7 +122,7 @@ namespace ForgeUpdaterTests {
         }
 
         [Test]
-        public void UpdateFromLocalTest() {
+        public async Task UpdateFromLocalTest() {
             const string testPath = "Test/Update";
             const string zipPath = "Fixture/Zips/S4Forge.1.0.0.zip";
 
@@ -129,8 +134,6 @@ namespace ForgeUpdaterTests {
             Directory.CreateDirectory(testPath);
             File.WriteAllText(Path.Combine(testPath, "S4Forge.dll"), "Test");
             File.WriteAllText(Path.Combine(testPath, "S4Forge.pdb"), "Test");
-
-
 
             Manifest sourceManifest = new Manifest() {
                 Id = "S4Forge",
@@ -147,10 +150,13 @@ namespace ForgeUpdaterTests {
                 Type = "test",
                 IgnoredEntries = new[] { "S4Forge.pdb" },
                 ClearResidualFiles = false,
+                Assets = new ManifestDownload() {
+                    AssetURI = zipPath
+                }
             };
 
             // Run
-            foreach (var progress in UpdatePipeline<Manifest>.UpdateFromLocal(sourceManifest, targetManifest, zipPath, testPath)) { }
+            await foreach (var progress in UpdatePipeline<Manifest>.UpdateFromLocal(sourceManifest, targetManifest, testPath, zipPath)) { }
 
             // Assert
             Assert.That(Directory.Exists(testPath), Is.True);
@@ -184,12 +190,12 @@ namespace ForgeUpdaterTests {
                 Id = "S4Forge",
                 Name = "S4Forge",
                 Version = new ManifestVersion("1.0.0"),
-                Url = "https://gitlab.settlers4-hd.com/s4-plugins/modapi/s4forgeupdater/-/raw/main/ForgeUpdaterTests/Fixture/Zips/",
+                Assets = new ManifestDownload() { AssetURI = "https://gitlab.settlers4-hd.com/s4-plugins/modapi/s4forgeupdater/-/raw/main/ForgeUpdaterTests/Fixture/Zips/S4Forge.1.0.0.zip" },
                 Type = "test",
             };
 
             // Run
-            await foreach (var progress in UpdatePipeline<Manifest>.InstallFromRemote(manifest, testPath)) {
+            await foreach (var progress in UpdatePipeline<Manifest>.UpdateFromRemote(null, manifest, testPath)) {
                 Console.WriteLine(progress);
             }
 
