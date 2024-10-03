@@ -25,8 +25,8 @@ namespace ForgeUpdaterManifest {
         [Output]
         public string ManifestOutputPath { get; set; } = null!;
 
-        public ITaskItem[] ManifestIgnoredEntries { get; set; } = null!;
-        public ITaskItem[] ManifestRelationships { get; set; } = null!;
+        public ITaskItem[]? ManifestIgnoredEntries { get; set; } = null;
+        public ITaskItem[]? ManifestRelationships { get; set; } = null;
 
         class MsBuildUpdateLogger(TaskLoggingHelper Log) : IUpdaterLogger {
             public void LogInfo(string message, params object[] args) {
@@ -61,19 +61,26 @@ namespace ForgeUpdaterManifest {
                 Assets = new ManifestDownload {
                     AssetURI = ManifestAssetUrl,
                 },
-                Embedded = ManifestEmbedded,
-                IgnoredEntries = ManifestIgnoredEntries.Select(i => i.ItemSpec).ToArray(),
-                Relationships = ManifestRelationships.Select(i => new Relationship() {
+                Embedded = ManifestEmbedded
+            };
+
+
+            if (ManifestIgnoredEntries is { Length: > 0 })
+                m.IgnoredEntries = ManifestIgnoredEntries.Select(i => i.ItemSpec).ToArray();
+
+            if (ManifestRelationships is { Length: > 0 })
+                m.Relationships = ManifestRelationships.Select(i => new Relationship() {
                     Id = i.ItemSpec,
                     ManifestUrl = i.GetMetadata("Manifest"),
                     Optional = bool.Parse(i.GetMetadata("Optional") ?? "false"),
                     Compatibility = new Compatibility {
-                        Minimum = i.GetMetadata("Minimum") ?? throw new ArgumentException($"Missing minimum compatible version for dependency {ManifestName}", "Minimum"),
+                        Minimum = i.GetMetadata("Minimum") ??
+                              throw new ArgumentException(
+                                  $"Missing minimum compatible version for dependency {ManifestName}", "Minimum"),
                         Maximum = i.GetMetadata("Maximum"),
                         Verified = i.GetMetadata("Verified")
                     }
-                }).ToArray()
-            };
+                }).ToArray() ?? Array.Empty<Relationship>();
 
             try {
                 ManifestOutputPath = ManifestOutputFolder.TrimEnd('/', '\\') + "\\manifest.json";
