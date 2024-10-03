@@ -8,18 +8,22 @@ namespace ForgeUpdater {
     public class ManifestStore<TManifest> where TManifest : Manifest {
         private readonly List<TManifest> manifests = new List<TManifest>();
 
-        public IEnumerable<(TManifest source, TManifest newer)> CheckForUpdatesWith(params ManifestStore<TManifest>[] other) {
+        public int Count => manifests.Count;
+
+        public IEnumerable<(TManifest? source, TManifest newer)> CheckForUpdatesWith(params ManifestStore<TManifest>[] other) {
             List<TManifest> remoteManifests = other.SelectMany(m => m.manifests).ToList();
 
-            foreach (TManifest manifest in manifests) {
-                TManifest? otherManifest = remoteManifests.Find(m => m.Id == manifest.Id);
+            foreach (TManifest remoteManifest in remoteManifests) {
+                TManifest? localManifest = manifests.Find(m => m.Id == remoteManifest.Id);
 
-                if (otherManifest == null) {
+                // New entry in the remote store, "install" it:
+                if (localManifest == null) {
+                    yield return (null, remoteManifest);
                     continue;
                 }
 
-                if (manifest.Version != otherManifest.Version) {
-                    yield return (manifest, otherManifest);
+                if (remoteManifest.Version != localManifest.Version) {
+                    yield return (localManifest, remoteManifest);
                 }
             }
         }
@@ -68,9 +72,28 @@ namespace ForgeUpdater {
             manifests.AddRange(newManifests);
         }
 
-        public static async Task<ManifestStore<TManifest>> FromLocal(bool recursive, bool readEmbeddedManifests, params string[] paths) {
-            ManifestStore<TManifest> store = new ManifestStore<TManifest>();
+        /// <summary>
+        /// Will create Stores based on the provided URI type.
+        /// <br/><br/>
+        /// Types:
+        /// <br/> 
+        /// - Local Directory: "C:\path\to\manifests" (Runs with recursive:true, readEmbeddedManifests: true) <br/>
+        /// - Store File: "C:/path/to/manifests.json" (local) or "https://example.com/manifests.json" (remote) <br/>
+        /// </summary>
+        public static async Task<ManifestStore<TManifest>> Create(string uri) {
+            return uri switch {
+                _ when uri.StartsWith("http") => await CreateFromRemoteStore(uri),
+                _ when uri.EndsWith(".json") => await CreateFromLocalStore(uri),
+                _ => await CreateFromLocal(true, true, uri)
+            };
+        }
 
+        public static async Task<ManifestStore<TManifest>> CreateFromLocal(bool recursive, bool readEmbeddedManifests, params string[] paths) {
+            ManifestStore<TManifest> store = new ManifestStore<TManifest>();
+            return await store.FromLocal(recursive, readEmbeddedManifests, paths);
+        }
+
+        public async Task<ManifestStore<TManifest>> FromLocal(bool recursive, bool readEmbeddedManifests, params string[] paths) {
             foreach (string path in paths) {
                 foreach (string file in Directory.GetFiles(path, "manifest.json", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)) {
                     try {
@@ -78,15 +101,16 @@ namespace ForgeUpdater {
                         TManifest? manifest = await JsonSerializer.DeserializeAsync<TManifest>(fileStream);
 
                         if (manifest == null) {
-                            UpdaterLogger.LogError(null, "Failed to parse manifest at %s", file);
+                            UpdaterLogger.LogError(null, "Failed to parse manifest at {0}", file);
                             continue;
                         }
 
-                        store.manifests.Add(manifest);
+                        manifest.ManifestPath = file;
+                        manifests.Add(manifest);
                     } catch (JsonException e) {
-                        UpdaterLogger.LogError(e, "Failed to parse manifest at %s", file);
+                        UpdaterLogger.LogError(e, "Failed to parse manifest at {0}", file);
                     } catch (Exception e) {
-                        UpdaterLogger.LogError(e, "Failed to read manifest at %s", file);
+                        UpdaterLogger.LogError(e, "Failed to read manifest at {0}", file);
                     }
                 }
 
@@ -95,16 +119,16 @@ namespace ForgeUpdater {
 
                 foreach (string file in Directory.GetFiles(path, "*.dll", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)) {
                     try {
-                        UpdaterLogger.LogDebug("Trying to read manifest from %s", file);
+                        UpdaterLogger.LogDebug("Trying to read manifest from {0}", file);
 
                         await using Stream fileStream = File.OpenRead(file);
 
-                        PEReader per = new PEReader(fileStream);
+                        using PEReader per = new PEReader(fileStream);
                         MetadataReader mr = per.GetMetadataReader();
                         CorHeader? peHeadersCorHeader = per.PEHeaders.CorHeader;
                         if (peHeadersCorHeader == null) {
                             // Not a .NET assembly with manifest metadata
-                            UpdaterLogger.LogDebug("No .NET manifest data in %s", file);
+                            UpdaterLogger.LogDebug("No .NET manifest data in {0}", file);
                             continue;
                         }
 
@@ -125,66 +149,81 @@ namespace ForgeUpdater {
                         }
 
                         if (manifestData == null) {
-                            UpdaterLogger.LogDebug("No manifest found in %s", file);
+                            UpdaterLogger.LogDebug("No manifest found in {0}", file);
                             continue;
                         }
 
                         TManifest? manifest = JsonSerializer.Deserialize<TManifest>(manifestData);
 
                         if (manifest == null) {
-                            UpdaterLogger.LogError(null, "Failed to parse manifest at %s", file);
+                            UpdaterLogger.LogError(null, "Failed to parse manifest at {0}", file);
                             continue;
                         }
 
-                        store.manifests.Add(manifest);
+                        manifests.Add(manifest);
                     } catch (JsonException e) {
-                        UpdaterLogger.LogError(e, "Failed to parse manifest at %s", file);
+                        UpdaterLogger.LogError(e, "Failed to parse manifest at {0}", file);
                     } catch (Exception e) {
-                        UpdaterLogger.LogError(e, "Failed to read manifest at %s", file);
+                        UpdaterLogger.LogError(e, "Failed to read manifest at {0}", file);
                     }
                 }
             }
 
-            return store;
+            return this;
         }
 
-        public static async Task<ManifestStore<TManifest>> FromRemote(params string[] remotes) {
+        public static async Task<ManifestStore<TManifest>> CreateFromRemoteStore(params string[] remotes) {
             using HttpClient httpClient = new HttpClient();
-            return await FromRemote(httpClient, remotes);
+            return await CreateFromRemoteStore(httpClient, remotes);
         }
 
-        public static async Task<ManifestStore<TManifest>> FromRemote(HttpClient client, params string[] remotes) {
-            ManifestStore<TManifest> store = new ManifestStore<TManifest>();
-
+        public static async Task<ManifestStore<TManifest>> CreateFromRemoteStore(HttpClient client, params string[] remotes) {
+            List<string> stores = new List<string>();
             foreach (string remote in remotes) {
                 try {
                     using HttpResponseMessage response = await client.GetAsync(remote);
-
-                    if (!response.IsSuccessStatusCode) {
-                        UpdaterLogger.LogError(null, "Failed to fetch manifest from %s: %s", remote, response.ReasonPhrase ?? "");
-                        continue;
-                    }
+                    response.EnsureSuccessStatusCode();
 
                     await using Stream stream = await response.Content.ReadAsStreamAsync();
-                    TManifest[]? remoteManifests = await JsonSerializer.DeserializeAsync<TManifest[]>(stream);
-
-                    if (remoteManifests == null) {
-                        UpdaterLogger.LogError(null, "Failed to parse manifest from %s", remote);
-                        continue;
-                    }
-
-                    store.manifests.AddRange(remoteManifests);
-                } catch (HttpRequestException e) {
-                    UpdaterLogger.LogError(e, "Failed to fetch manifest from %s", remote);
-                } catch (JsonException e) {
-                    UpdaterLogger.LogError(e, "Failed to parse manifest from %s", remote);
+                    stores.Add(await new StreamReader(stream).ReadToEndAsync());
                 } catch (Exception e) {
-                    UpdaterLogger.LogError(e, "Failed to fetch manifest from %s", remote);
+                    UpdaterLogger.LogError(e, "Failed to read remote manifests from {0}", remote);
                 }
             }
 
-            store.MergeDuplicates();
-            return store;
+
+            ManifestStore<TManifest> store = new ManifestStore<TManifest>();
+            return store.FromStore(stores.ToArray());
+        }
+
+        public static async Task<ManifestStore<TManifest>> CreateFromLocalStore(string path) {
+            string storeJson = await File.ReadAllTextAsync(path);
+            ManifestStore<TManifest> store = new ManifestStore<TManifest>();
+            return store.FromStore(storeJson);
+        }
+
+
+        public ManifestStore<TManifest> FromStore(params string[] storeJson) {
+            manifests.Clear();
+
+            foreach (string store in storeJson) {
+                try {
+                    TManifest[]? newManifests = JsonSerializer.Deserialize<TManifest[]>(store);
+
+                    if (newManifests == null) {
+                        UpdaterLogger.LogError(null, "Failed to parse remote manifests\n{0}", store);
+                        continue;
+                    }
+
+                    manifests.AddRange(newManifests);
+                } catch (JsonException e) {
+                    UpdaterLogger.LogError(e, "Failed to parse remote manifests\n{0}", store);
+                } catch (Exception e) {
+                    UpdaterLogger.LogError(e, "Failed to read remote manifests\n{0}", store);
+                }
+            }
+
+            return this;
         }
     }
 }

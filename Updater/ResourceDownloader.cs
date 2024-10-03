@@ -7,7 +7,11 @@ using Octodiff.Diagnostics;
 
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
+using System.IO.Compression;
+using System.Net;
 using System.Security.Cryptography;
+
+using DownloadProgressChangedEventArgs = Downloader.DownloadProgressChangedEventArgs;
 
 
 namespace ForgeUpdater.Updater {
@@ -16,7 +20,7 @@ namespace ForgeUpdater.Updater {
         private TManifest TargetManifest { get; }
 
         public ResourceDownloader(TManifest? from, TManifest to) {
-            if (string.IsNullOrEmpty(to.Url))
+            if (string.IsNullOrEmpty(to.Assets?.AssetURI))
                 throw new ArgumentException("Manifest does not have a download URL.");
 
             if (from != null && to.Id != from.Id)
@@ -37,15 +41,16 @@ namespace ForgeUpdater.Updater {
         /// <summary>
         /// The URI for the remote resource.
         /// </summary>
-        string URI => $"{TargetManifest.Url!.TrimEnd('/')}/{Name}.{TargetVersion}.zip";
+        string URI => TargetManifest.Assets?.AssetURI!;
         string ChecksumURI => URI + ".sha1";
-        string? DeltaPatchURI => SourceVersion != null ? URI + $".{SourceVersion}.delta" : null;
 
-        string? SourceZipPath => SourceVersion != null ? $"{UpdaterConfig.BaseDownloadPath}/{Name}.{SourceVersion}.zip" : null;
+        string? DeltaPatchURI => TargetManifest.Assets?.DeltaPatchUrlFromVersion(SourceVersion)?.DeltaURI;
+        string? DeltaSourceZipPath => TargetManifest.Assets?.DeltaPatchUrlFromVersion(SourceVersion)?.SourceFileName;
+
         string TargetZipPath => $"{UpdaterConfig.BaseDownloadPath}/{Name}.{TargetVersion}.zip";
         string TargetDeltaPatchPath => TargetZipPath + $".{SourceVersion}.delta";
 
-        bool HasBaseFile => File.Exists(SourceZipPath);
+        bool HasBaseFile => File.Exists(DeltaSourceZipPath);
         bool CanDeltaPatch => HasBaseFile;
 
         int RetryCount { get; set; } = 3;
@@ -88,18 +93,18 @@ namespace ForgeUpdater.Updater {
             download.DownloadFileCompleted += (sender, args) => {
 
                 if (args.Cancelled) {
-                    UpdaterLogger.LogWarn("Download of %s was cancelled.", Name);
+                    UpdaterLogger.LogWarn("Download of {0} was cancelled.", Name);
                     downloadCompleted.SetResult(false);
                     return;
                 }
 
                 if (args.Error != null) {
-                    UpdaterLogger.LogError(args.Error, "Failed to download %s", Name);
+                    UpdaterLogger.LogError(args.Error, "Failed to download {0}", Name);
                     downloadCompleted.SetResult(false);
                     return;
                 }
 
-                UpdaterLogger.LogInfo("Download of %s completed successfully.", Name);
+                UpdaterLogger.LogInfo("Download of {0} completed successfully.", Name);
                 downloadCompleted.SetResult(true);
             };
 
@@ -114,7 +119,7 @@ namespace ForgeUpdater.Updater {
             }
 
             if (deltaPatch && !ApplyDeltaPatch()) {
-                UpdaterLogger.LogWarn("Failed to apply delta patch to %s", Name);
+                UpdaterLogger.LogWarn("Failed to apply delta patch to {0}", Name);
 
                 Cleanup();
                 Retry();
@@ -122,7 +127,7 @@ namespace ForgeUpdater.Updater {
 
 
             if (!CheckDownload()) {
-                UpdaterLogger.LogWarn("Checksum verification failed for %s", Name);
+                UpdaterLogger.LogWarn("Checksum verification failed for {0}", Name);
 
                 Cleanup();
                 Retry();
@@ -137,7 +142,7 @@ namespace ForgeUpdater.Updater {
 
             RetryCount--;
 
-            UpdaterLogger.LogInfo("Retrying download of %s, %d attempts left.", Name, RetryCount);
+            UpdaterLogger.LogInfo("Retrying download of {0}, {1} attempts left.", Name, RetryCount);
             await Download();
         }
 
@@ -146,40 +151,40 @@ namespace ForgeUpdater.Updater {
         /// </summary>
         /// <exception cref="FileNotFoundException"></exception>
         private bool ApplyDeltaPatch() {
-            if (!File.Exists(SourceZipPath))
+            if (!File.Exists(DeltaSourceZipPath))
                 throw new FileNotFoundException("Source zip file not found.");
             if (!File.Exists(TargetDeltaPatchPath))
                 throw new FileNotFoundException("Delta patch file not found.");
 
-            UpdaterLogger.LogInfo("Applying delta patch to %s", SourceZipPath);
+            UpdaterLogger.LogInfo("Applying delta patch to {0}", DeltaSourceZipPath);
 
-            string intermediatePatchZipName = SourceZipPath + ".old";
+            string intermediatePatchZipName = DeltaSourceZipPath + ".old";
             if (File.Exists(intermediatePatchZipName))
                 File.Delete(intermediatePatchZipName);
 
             try {
-                File.Move(SourceZipPath, intermediatePatchZipName, true);
+                File.Move(DeltaSourceZipPath, intermediatePatchZipName, true);
 
-                string finalZipPath = SourceZipPath;
+                string finalZipPath = DeltaSourceZipPath;
 
-                var deltaApplier = new DeltaApplier { SkipHashCheck = false };
                 using (var basisStream = new FileStream(intermediatePatchZipName, FileMode.Open, FileAccess.Read, FileShare.Read))
                 using (var deltaStream = new FileStream(TargetDeltaPatchPath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 using (var newFileStream = new FileStream(finalZipPath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read)) {
+                    var deltaApplier = new DeltaApplier { SkipHashCheck = false };
                     deltaApplier.Apply(basisStream, new BinaryDeltaReader(deltaStream, new ConsoleProgressReporter()), newFileStream);
                 }
 
-                UpdaterLogger.LogDebug("Delta patch applied successfully to %s", SourceZipPath);
+                UpdaterLogger.LogDebug("Delta patch applied successfully to {0}", DeltaSourceZipPath);
 
                 File.Delete(TargetDeltaPatchPath);
                 File.Delete(intermediatePatchZipName);
 
                 return true;
             } catch (Exception e) {
-                UpdaterLogger.LogError(e, "Failed to apply delta patch to %s", SourceZipPath);
+                UpdaterLogger.LogError(e, "Failed to apply delta patch to {0}", DeltaSourceZipPath);
 
-                if (File.Exists(SourceZipPath))
-                    File.Delete(SourceZipPath);
+                if (File.Exists(DeltaSourceZipPath))
+                    File.Delete(DeltaSourceZipPath);
                 if (File.Exists(intermediatePatchZipName))
                     File.Delete(intermediatePatchZipName);
 
@@ -189,7 +194,14 @@ namespace ForgeUpdater.Updater {
 
         private bool CheckDownload() {
             if (!File.Exists(TargetZipPath)) {
-                UpdaterLogger.LogError(null, "Download of %s failed.", Name);
+                UpdaterLogger.LogError(null, "Download of {0} failed.", Name);
+                return false;
+            }
+
+            try {
+                using ZipArchive z = ZipFile.OpenRead(TargetZipPath);
+            } catch (Exception e) {
+                UpdaterLogger.LogError(e, "Downloaded zip file {0} could not be opened correctly", Name);
                 return false;
             }
 
@@ -203,17 +215,23 @@ namespace ForgeUpdater.Updater {
                     byte[] localChecksum = sha1.ComputeHash(fileStream);
                     return string.Equals(BitConverter.ToString(localChecksum).Replace("-", string.Empty), remoteChecksum, StringComparison.InvariantCultureIgnoreCase);
                 } catch (Exception e) {
-                    UpdaterLogger.LogError(e, "Failed to verify checksum for %s", Name);
+                    UpdaterLogger.LogError(e, "Failed to verify checksum for {0}", Name);
                     return false;
                 }
-            } catch (Exception) {
-                UpdaterLogger.LogWarn("Failed to download checksum for %s", Name);
+            } catch (Exception e) {
+                // check if e is a http error with code 404
+                if (e is AggregateException { InnerException: HttpRequestException { StatusCode: HttpStatusCode.NotFound } }) {
+                    UpdaterLogger.LogWarn("Checksum for {0} not found, skipping verification", Name);
+                    return true;
+                }
+
+                UpdaterLogger.LogWarn("Failed to download checksum for {0}", Name);
                 return true;
             }
         }
 
         private void Cleanup() {
-            UpdaterLogger.LogDebug("Cleaning up failed download of %s", Name);
+            UpdaterLogger.LogDebug("Cleaning up failed download of {0}", Name);
 
             if (File.Exists(TargetZipPath))
                 File.Delete(TargetZipPath);

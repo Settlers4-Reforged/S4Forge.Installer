@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
@@ -22,14 +23,14 @@ public record Manifest {
     public required string Id { get; set; }
 
     /// <summary>
-    /// The URL of the resource's documentation.
+    /// The URI of the resource's documentation.
     /// <br/>
-    /// It should point to a "folder" of where to find the requested resources.
+    /// It should point to the zip of the resource.
     /// <br/><br/>
-    /// <b>Example:</b> `https://example.com/assets/` and the resource "X" at version 1.0.0 is then located at `https://example.com/assets/X.1.0.0.zip/`
+    /// <b>Example:</b> `https://example.com/assets/X.1.0.0.zip/` or `C:\Users\example\Downloads\X.1.0.0.zip`
     /// </summary>
-    [JsonPropertyName("url")]
-    public string? Url { get; set; }
+    [JsonPropertyName("assets")]
+    public ManifestDownload? Assets { get; set; }
 
     /// <summary>
     /// The URL of the manifest.
@@ -40,12 +41,14 @@ public record Manifest {
     /// <summary>
     /// A list of files or folders that should be ignored when updating/deleting/verifying this resource.
     /// </summary>
+    [JsonPropertyName("ignoredEntries")]
     public string[]? IgnoredEntries { get; set; }
 
     /// <summary>
     /// Whether or not the updater should clear residual files after an update.
     /// E.g. if the update should remove files that are no longer needed (Which are also not ignored in the manifest).
     /// </summary>
+    [JsonPropertyName("clearResidualFiles")]
     public bool ClearResidualFiles { get; set; } = UpdaterConfig.DefaultUpdateShouldClearResidualFiles;
 
     /// <summary>
@@ -69,4 +72,45 @@ public record Manifest {
     [JsonPropertyName("relationships")]
     public Relationship[] Relationships { get; set; } = Array.Empty<Relationship>();
 
+    [JsonIgnore]
+    public string ManifestPath { get; set; } = string.Empty;
+
+    public void UpdateFile(Manifest other) {
+
+        Name = other.Name;
+        Assets = other.Assets;
+        ManifestUrl = other.ManifestUrl;
+        IgnoredEntries = other.IgnoredEntries;
+        ClearResidualFiles = other.ClearResidualFiles;
+        Version = other.Version;
+        Type = other.Type;
+        Relationships = other.Relationships;
+
+        if (string.IsNullOrEmpty(ManifestPath))
+            return;
+
+        if (!File.Exists(ManifestPath)) {
+            UpdaterLogger.LogWarn($"Manifest file {ManifestPath} did not exist");
+        }
+
+        Save(ManifestPath);
+    }
+
+    public void Save(string path) {
+        File.WriteAllText(path, JsonSerializer.Serialize(this, new JsonSerializerOptions() { WriteIndented = true }));
+    }
+
+    public virtual bool Equals(Manifest? other) {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Name == other.Name &&
+               Id == other.Id &&
+               Assets == other.Assets &&
+               ManifestUrl == other.ManifestUrl &&
+               EqualityComparer<string[]?>.Default.Equals(IgnoredEntries, other.IgnoredEntries) &&
+               ClearResidualFiles == other.ClearResidualFiles &&
+               Version == other.Version &&
+               Type == other.Type &&
+               Relationships.SequenceEqual(other.Relationships);
+    }
 }

@@ -9,12 +9,35 @@ using System.Threading.Tasks;
 
 namespace ForgeUpdater.Updater {
     public class UpdatePipeline<TManifest> where TManifest : Manifest {
-        public static IAsyncEnumerable<(UpdatePipelineStep, float)> UpdateFromRemote(TManifest source, TManifest target, string installPath) {
-            return InstallFromRemote(target, installPath);
+        public static void CleanupLeftoverFiles(string installPath) {
+            ResourceUpdater<TManifest>.CleanupLeftoverFiles(installPath);
         }
 
-        public static async IAsyncEnumerable<(UpdatePipelineStep, float)> InstallFromRemote(TManifest target, string installPath) {
-            var downloader = new ResourceDownloader<TManifest>(null, target);
+        public static IAsyncEnumerable<string> Update(TManifest? source, TManifest target, string installPath) {
+            if (target.Assets == null) {
+                throw new InvalidOperationException("Manifest does not have a download URL.");
+            }
+
+            bool isRemote = target.Assets.AssetURI.StartsWith("http");
+
+            try {
+                return isRemote ? UpdateFromRemote(source, target, installPath) : UpdateFromLocal(source, target, installPath);
+            } catch (Exception e) {
+                UpdaterLogger.LogError(e, "Failed to update resource");
+            }
+
+            return AsyncEnumerable.Empty<string>();
+        }
+
+        public static async IAsyncEnumerable<string> UpdateFromRemote(TManifest? source, TManifest target, string installPath) {
+            if (target.Assets == null) {
+                throw new InvalidOperationException("Manifest does not have a download URL.");
+            }
+            if (target.Assets == null) {
+                throw new InvalidOperationException("Manifest does not have a download URL.");
+            }
+
+            var downloader = new ResourceDownloader<TManifest>(source, target);
 
             var progress = Channel.CreateUnbounded<float>();
             downloader.DownloadProgressChanged += async (sender, e) => {
@@ -37,24 +60,26 @@ namespace ForgeUpdater.Updater {
                     progressPercentage = await progress.Reader.ReadAsync(cts.Token);
                 } catch (OperationCanceledException) { }
 
-                yield return (UpdatePipelineStep.Download, progressPercentage);
+                yield return $"Download: {progressPercentage:P}";
             }
             string downloadedZip = await downloadedZipTask;
 
             var updater = new ResourceUpdater<TManifest>(target, downloadedZip, installPath);
             foreach (float step in updater.Update()) {
-                yield return (UpdatePipelineStep.Unpack, step);
+                yield return $"Unpack: {step:P}";
             }
+
+            yield return "Done";
         }
 
-        public static IEnumerable<(UpdatePipelineStep, float)> UpdateFromLocal(TManifest source, TManifest target, string zipPath, string installPath) {
-            return InstallFromLocal(target, zipPath, installPath);
-        }
+        public static async IAsyncEnumerable<string> UpdateFromLocal(TManifest? source, TManifest target, string installPath, string? zipPath = null) {
+            if (target.Assets == null) {
+                throw new InvalidOperationException("Manifest does not have a download URL.");
+            }
 
-        public static IEnumerable<(UpdatePipelineStep, float)> InstallFromLocal(TManifest target, string zipPath, string installPath) {
-            var updater = new ResourceUpdater<TManifest>(target, zipPath, installPath);
+            var updater = new ResourceUpdater<TManifest>(target, zipPath ?? target.Assets.AssetURI, installPath);
             foreach (float step in updater.Update()) {
-                yield return (UpdatePipelineStep.Unpack, step);
+                yield return $"Unpack: {step:P}";
             }
         }
     }
