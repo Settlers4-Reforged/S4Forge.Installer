@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ForgeUpdateUI": {
+      "commandName": "Project",
+      "commandLineArgs": "--store='K:\\Projekte\\Siedler4\\S4ModdingFramework\\S4ForgeUpdater\\ForgeUpdaterTests\\Fixture\\Stores\\testStore.json'"
+    }
+  }
+}

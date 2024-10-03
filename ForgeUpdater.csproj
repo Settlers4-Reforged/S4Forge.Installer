@@ -8,8 +8,11 @@
 
   <ItemGroup>
     <Compile Remove="ForgeUpdaterTests\**" />
+    <Compile Remove="ForgeUpdateUI\**" />
     <EmbeddedResource Remove="ForgeUpdaterTests\**" />
+    <EmbeddedResource Remove="ForgeUpdateUI\**" />
     <None Remove="ForgeUpdaterTests\**" />
+    <None Remove="ForgeUpdateUI\**" />
   </ItemGroup>
 
   <ItemGroup>

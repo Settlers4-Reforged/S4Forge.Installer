@@ -1,0 +1,57 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="ForgeUpdateUI.App"
+             RequestedThemeVariant="Light">
+    <Application.Resources>
+        <FontFamily x:Key="MainFont">avares://ForgeUpdateUI/Assets/Fonts#Nunito</FontFamily>
+        <FontFamily x:Key="CodeFont">avares://ForgeUpdateUI/Assets/Fonts#Source Code Pro</FontFamily>
+    </Application.Resources>
+
+    <Application.Styles>
+        <FluentTheme>
+            <FluentTheme.Palettes>
+                <!--<ColorPaletteResources x:Key="Light" Accent="#cc4d11" AltHigh="White" AltLow="White" AltMedium="White" AltMediumHigh="White" AltMediumLow="White" BaseHigh="Black" BaseLow="#43687a" BaseMedium="#1b4058" BaseMediumHigh="#002541" BaseMediumLow="#0d324c" ChromeAltLow="#002541" ChromeBlackHigh="Black" ChromeBlackLow="#43687a" ChromeBlackMedium="#002541" ChromeBlackMediumLow="#1b4058" ChromeDisabledHigh="#43687a" ChromeDisabledLow="#1b4058" ChromeGray="#0d324c" ChromeHigh="#43687a" ChromeLow="#acc9d8" ChromeMedium="#97b6c5" ChromeMediumLow="#acc9d8" ChromeWhite="White" ListLow="#97b6c5" ListMedium="#43687a" RegionColor="#cfeaff" />-->
+                <ColorPaletteResources x:Key="Light"
+                                       Accent="#DAA520"
+                                       AltHigh="#fcfbfc"
+                                       AltLow="#fcfbfc"
+                                       AltMedium="#fcfbfc"
+                                       AltMediumHigh="#fcfbfc"
+                                       AltMediumLow="#fcfbfc"
+                                       BaseHigh="#334054"
+                                       BaseLow="#DAA520"
+                                       BaseMedium="#986a0d"
+                                       BaseMediumHigh="#6c4200"
+                                       BaseMediumLow="#825606"
+                                       ChromeAltLow="#6c4200"
+                                       ChromeBlackHigh="#DAA520"
+                                       ChromeBlackLow="#DAA520"
+                                       ChromeBlackMedium="#6c4200"
+                                       ChromeBlackMediumLow="#986a0d"
+                                       ChromeDisabledHigh="#DAA520"
+                                       ChromeDisabledLow="#986a0d"
+                                       ChromeGray="#825606"
+                                       ChromeHigh="#DAA520"
+                                       ChromeLow="#f4dea0"
+                                       ChromeMedium="#efd386"
+                                       ChromeMediumLow="#f4dea0"
+                                       ChromeWhite="#fcfbfc"
+                                       ListLow="#efd386"
+                                       ListMedium="#DAA520"
+                                       RegionColor="White" />
+            </FluentTheme.Palettes>
+        </FluentTheme>
+        <Style Selector="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource MainFont}" />
+        </Style>
+        <Style Selector="Button">
+            <Style.Resources>
+                <SolidColorBrush x:Key="ButtonBackgroundPointerOver">#CA9510</SolidColorBrush>
+            </Style.Resources>
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="FontFamily" Value="{StaticResource MainFont}" />
+        </Style>
+    </Application.Styles>
+
+</Application>
