@@ -11,6 +11,9 @@ public record Store {
         RemoteStorePaths = remoteStorePaths;
     }
 
+    [JsonPropertyName("name")]
+    public string Name { get; set; }
+
     [JsonPropertyName("installation_path")]
     public string InstallationPath { get; set; }
 
@@ -19,8 +22,8 @@ public record Store {
 
 
     [JsonPropertyName("install_into_folders")]
-    public bool InstallIntoFolders { get; init; } = true;
+    public bool InstallIntoFolders { get; set; } = true;
 
     [JsonPropertyName("keep_residual_files")]
-    public bool KeepResidualFiles { get; init; } = UpdaterConfig.DefaultUpdateShouldClearResidualFiles;
+    public bool KeepResidualFiles { get; set; } = UpdaterConfig.DefaultUpdateShouldClearResidualFiles;
 }

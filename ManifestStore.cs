@@ -97,7 +97,7 @@ namespace ForgeUpdater {
             foreach (string path in paths) {
                 foreach (string file in Directory.GetFiles(path, "manifest.json", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)) {
                     try {
-                        await using Stream fileStream = File.OpenRead(file);
+                        using Stream fileStream = File.OpenRead(file);
                         TManifest? manifest = await JsonSerializer.DeserializeAsync<TManifest>(fileStream);
 
                         if (manifest == null) {
@@ -119,9 +119,9 @@ namespace ForgeUpdater {
 
                 foreach (string file in Directory.GetFiles(path, "*.dll", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)) {
                     try {
-                        UpdaterLogger.LogDebug("Trying to read manifest from {0}", file);
+                        UpdaterLogger.LogDebug("Trying to read manifest from assembly: {0}", file);
 
-                        await using Stream fileStream = File.OpenRead(file);
+                        using Stream fileStream = File.OpenRead(file);
 
                         using PEReader per = new PEReader(fileStream);
                         MetadataReader mr = per.GetMetadataReader();
@@ -160,6 +160,7 @@ namespace ForgeUpdater {
                             continue;
                         }
 
+                        manifest.Embedded = true;
                         manifests.Add(manifest);
                     } catch (JsonException e) {
                         UpdaterLogger.LogError(e, "Failed to parse manifest at {0}", file);
@@ -184,7 +185,7 @@ namespace ForgeUpdater {
                     using HttpResponseMessage response = await client.GetAsync(remote);
                     response.EnsureSuccessStatusCode();
 
-                    await using Stream stream = await response.Content.ReadAsStreamAsync();
+                    using Stream stream = await response.Content.ReadAsStreamAsync();
                     stores.Add(await new StreamReader(stream).ReadToEndAsync());
                 } catch (Exception e) {
                     UpdaterLogger.LogError(e, "Failed to read remote manifests from {0}", remote);
@@ -197,7 +198,7 @@ namespace ForgeUpdater {
         }
 
         public static async Task<ManifestStore<TManifest>> CreateFromLocalStore(string path) {
-            string storeJson = await File.ReadAllTextAsync(path);
+            string storeJson = File.ReadAllText(path);
             ManifestStore<TManifest> store = new ManifestStore<TManifest>();
             return store.FromStore(storeJson);
         }

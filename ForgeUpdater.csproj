@@ -1,24 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>12.0</LangVersion>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="ForgeUpdaterTests\**" />
-    <Compile Remove="ForgeUpdateUI\**" />
-    <EmbeddedResource Remove="ForgeUpdaterTests\**" />
-    <EmbeddedResource Remove="ForgeUpdateUI\**" />
-    <None Remove="ForgeUpdaterTests\**" />
-    <None Remove="ForgeUpdateUI\**" />
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="ForgeUpdaterManifest\**" />
+        <Compile Remove="ForgeUpdaterTests\**" />
+        <Compile Remove="ForgeUpdateUI\**" />
+        <EmbeddedResource Remove="ForgeUpdaterManifest\**" />
+        <EmbeddedResource Remove="ForgeUpdaterTests\**" />
+        <EmbeddedResource Remove="ForgeUpdateUI\**" />
+        <None Remove="ForgeUpdaterManifest\**" />
+        <None Remove="ForgeUpdaterTests\**" />
+        <None Remove="ForgeUpdateUI\**" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Downloader" Version="3.1.2" />
-    <PackageReference Include="Octopus.Octodiff" Version="2.0.546" />
-    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
-  </ItemGroup>
-
+    <ItemGroup>
+        <PackageReference Include="Downloader" Version="3.1.2" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+        <PackageReference Include="Octopus.Octodiff" Version="2.0.546" />
+        <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+        <PackageReference Include="System.Reflection.Metadata" Version="8.0.0" />
+        <PackageReference Include="System.Text.Json" Version="8.0.4" />
+        <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
+    </ItemGroup>
 </Project>

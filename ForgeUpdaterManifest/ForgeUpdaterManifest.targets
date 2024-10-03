@@ -1,0 +1,33 @@
+<Project>
+  <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
+  <Target Name="BeforeCompile" Condition="'$(ManifestId)' != ''">
+
+      <PropertyGroup>
+          <ManifestOutputFolder Condition="'$(ManifestOutputFolder)' == ''">$(ProjectDir)</ManifestOutputFolder>
+      </PropertyGroup>
+
+      <Message Text="Creating manifest with id: '$(ManifestId)' at: '$(ManifestOutputFolder)'" Importance="high" />
+
+      <CreateManifestTask
+          ManifestId="$(ManifestId)"
+          ManifestName="$(ManifestName)"
+          ManifestVersion="$(ManifestVersion)"
+          ManifestType="$(ManifestType)"
+          ManifestAssetUrl="$(ManifestAssetUrl)"
+          ManifestClearResidualFiles="$(ManifestClearResidualFiles)"
+          ManifestEmbedded="$(ManifestEmbedded)"
+
+          ManifestOutputFolder="$(ManifestOutputFolder)"
+
+          ManifestIgnoredEntries="@(ManifestIgnoredEntries)"
+          ManifestRelationships="@(ManifestRelationships)"
+          >
+          <Output TaskParameter="ManifestOutputPath" PropertyName="ManifestOutputPath" />
+      </CreateManifestTask>
+
+      <ItemGroup>
+          <EmbeddedResource Condition="'$(ManifestEmbedded)' == 'true'" Include="ManifestOutputPath" />
+          <Content Condition="'$(ManifestEmbedded)' == 'false'" Include="ManifestOutputPath" />
+      </ItemGroup>
+  </Target>
+</Project>

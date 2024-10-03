@@ -21,9 +21,9 @@ namespace ForgeUpdater.Updater {
 
         bool ShouldClearResidualFiles => TargetManifest.ClearResidualFiles;
 
-        TManifest TargetManifest { get; init; }
-        string UpdateZip { get; init; }
-        private string TargetFolder { get; init; }
+        TManifest TargetManifest { get; set; }
+        string UpdateZip { get; set; }
+        private string TargetFolder { get; set; }
 
         public IEnumerable<float> Update() {
             using ZipArchive zip = ZipFile.OpenRead(UpdateZip);
@@ -88,7 +88,7 @@ namespace ForgeUpdater.Updater {
 
                 try {
                     // Open C# assemblies are locked by handle only, but the file can be still be renamed.
-                    File.Move(file, file + ".updater_leftover", true);
+                    File.Move(file, file + ".updater_leftover");
                 } catch (Exception e2) {
                     UpdaterLogger.LogError(e2, "Failed to delete and rename file: {0}", file);
                 }
@@ -107,7 +107,7 @@ namespace ForgeUpdater.Updater {
             if (actionScript == null) return;
 
             using StreamReader reader = new StreamReader(actionScript.Open());
-            string[] actionLines = reader.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            string[] actionLines = reader.ReadToEnd().Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             ApplyInstallerActions(actionLines);
         }
 

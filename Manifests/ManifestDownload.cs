@@ -8,20 +8,23 @@ using System.Threading.Tasks;
 namespace ForgeUpdater.Manifests {
     public record ManifestDownload {
         [JsonPropertyName("uri")]
-        public required string AssetURI { get; init; }
+        [JsonRequired]
+        public string AssetURI { get; set; }
 
         /// <summary>
         /// All available delta patches for this resource.
         /// Source is the file name of the base version zip, delta is URI to the patch to the next version.
         /// </summary>
         [JsonPropertyName("deltaPatchesURI")]
-        public Dictionary<ManifestVersion, DeltaPatch>? DeltaPatchesURI { get; init; }
+        public Dictionary<ManifestVersion, DeltaPatch>? DeltaPatchesURI { get; set; }
 
         public record DeltaPatch {
             [JsonPropertyName("sourceFileName")]
-            public required string SourceFileName { get; init; }
+            [JsonRequired]
+            public string SourceFileName { get; set; }
             [JsonPropertyName("deltaURI")]
-            public required string DeltaURI { get; init; }
+            [JsonRequired]
+            public string DeltaURI { get; set; }
 
             // implicit convert from Tuple
             public static implicit operator DeltaPatch((string SourceFileName, string DeltaURI) tuple) => new DeltaPatch() {

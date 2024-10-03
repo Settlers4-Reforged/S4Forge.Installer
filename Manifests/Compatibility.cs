@@ -7,7 +7,8 @@ public record Compatibility {
     /// Gets or sets the minimum compatibility version.
     /// </summary>
     [JsonPropertyName("minimum")]
-    public required ManifestVersion Minimum { get; set; }
+    [JsonRequired]
+    public ManifestVersion Minimum { get; set; }
 
     /// <summary>
     /// Gets or sets the verified compatibility version.

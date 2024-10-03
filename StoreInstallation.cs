@@ -14,7 +14,7 @@ namespace ForgeUpdater {
         private readonly List<ManifestStore<TManifest>> remoteStore = new List<ManifestStore<TManifest>>();
         private readonly Store store;
 
-        public Store Store { get => store; }
+        public Store Store => store;
 
         public StoreInstallation(string installationPath, string remoteStorePath) {
             store = new Store(installationPath, remoteStorePath);
@@ -31,13 +31,13 @@ namespace ForgeUpdater {
                 string fileContent = System.IO.File.ReadAllText(storePath);
                 store = JsonSerializer.Deserialize<Store>(fileContent)!;
 
-                if (!Path.IsPathFullyQualified(store.InstallationPath)) {
-                    store.InstallationPath = Path.GetFullPath(store.InstallationPath, Path.GetDirectoryName(storePath)!);
+                if (!PathExtensions.IsPathFullyQualified(store.InstallationPath)) {
+                    store.InstallationPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(storePath)!, store.InstallationPath));
                 }
 
                 for (int i = 0; i < store.RemoteStorePaths?.Length; i++) {
-                    if (!Path.IsPathFullyQualified(store.RemoteStorePaths[i] ?? "")) {
-                        store.RemoteStorePaths[i] = Path.GetFullPath(store.RemoteStorePaths[i]!, Path.GetDirectoryName(storePath)!);
+                    if (!PathExtensions.IsPathFullyQualified(store.RemoteStorePaths[i] ?? "")) {
+                        store.RemoteStorePaths[i] = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(storePath)!, store.RemoteStorePaths[i]!));
                     }
                 }
             } catch (Exception e) {
@@ -93,7 +93,7 @@ namespace ForgeUpdater {
                 try {
                     if (source != null) {
                         source?.UpdateFile(target);
-                    } else {
+                    } else if (!target.Embedded) {
                         string newManifestPath = Path.Combine(installationPath, "manifest.json");
                         target.Save(newManifestPath);
                     }

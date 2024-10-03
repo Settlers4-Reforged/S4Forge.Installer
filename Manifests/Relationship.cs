@@ -7,7 +7,8 @@ public record Relationship {
     /// The id of the dependency.
     /// </summary>
     [JsonPropertyName("id")]
-    public required string Id { get; set; }
+    [JsonRequired]
+    public string Id { get; set; }
 
     /// <summary>
     /// Whether the dependency is optional, or not.
@@ -25,5 +26,6 @@ public record Relationship {
     /// The compatible versions for the dependency. E.g. what version the relationship should have for it to be compatible.
     /// </summary>
     [JsonPropertyName("compatibility")]
-    public required Compatibility Compatibility { get; set; }
+    [JsonRequired]
+    public Compatibility Compatibility { get; set; }
 }

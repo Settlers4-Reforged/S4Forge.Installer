@@ -58,7 +58,6 @@ namespace ForgeUpdater.Updater {
         /// <summary>
         /// Whether a delta patch is on the remote server available.
         /// </summary>
-        [MemberNotNullWhen(true, nameof(DeltaPatchURI))]
         bool IsDeltaPatchAvailable() {
             if (DeltaPatchURI == null) return false;
 
@@ -163,7 +162,7 @@ namespace ForgeUpdater.Updater {
                 File.Delete(intermediatePatchZipName);
 
             try {
-                File.Move(DeltaSourceZipPath, intermediatePatchZipName, true);
+                File.Move(DeltaSourceZipPath, intermediatePatchZipName);
 
                 string finalZipPath = DeltaSourceZipPath;
 
@@ -220,7 +219,7 @@ namespace ForgeUpdater.Updater {
                 }
             } catch (Exception e) {
                 // check if e is a http error with code 404
-                if (e is AggregateException { InnerException: HttpRequestException { StatusCode: HttpStatusCode.NotFound } }) {
+                if (e is AggregateException { InnerException: HttpRequestException }) {
                     UpdaterLogger.LogWarn("Checksum for {0} not found, skipping verification", Name);
                     return true;
                 }

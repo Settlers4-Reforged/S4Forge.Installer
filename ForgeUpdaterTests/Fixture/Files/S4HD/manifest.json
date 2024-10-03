@@ -5,10 +5,10 @@
     "uri": "https://gitlab.settlers4-hd.com/s4-plugins/modapi/s4forgeupdater/-/raw/main/ForgeUpdaterTests/Fixture/Zips/S4Forge.1.0.0.zip",
     "deltaPatchesURI": null
   },
-  "manifest": null,
   "ignoredEntries": null,
   "clearResidualFiles": true,
   "version": "1.0.0",
   "type": "test",
-  "relationships": []
+  "relationships": [],
+  "embedded": false
 }

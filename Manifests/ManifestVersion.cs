@@ -9,9 +9,9 @@ namespace ForgeUpdater.Manifests;
 [JsonConverter(typeof(ManifestVersionConverter))]
 public record ManifestVersion : IComparable<ManifestVersion> {
     // A null value means that the version is a wildcard
-    public int? Major { get; init; }
-    public int? Minor { get; init; }
-    public int? Patch { get; init; }
+    public int? Major { get; set; }
+    public int? Minor { get; set; }
+    public int? Patch { get; set; }
 
     public bool HasWildcard => Major == null || Minor == null || Patch == null;
 

@@ -14,13 +14,15 @@ public record Manifest {
     /// The name of the resource.
     /// </summary>
     [JsonPropertyName("name")]
-    public required string Name { get; set; }
+    [JsonRequired]
+    public string Name { get; set; }
 
     /// <summary>
     /// The id of the resource.
     /// </summary>
     [JsonPropertyName("id")]
-    public required string Id { get; set; }
+    [JsonRequired]
+    public string Id { get; set; }
 
     /// <summary>
     /// The URI of the resource's documentation.
@@ -31,12 +33,6 @@ public record Manifest {
     /// </summary>
     [JsonPropertyName("assets")]
     public ManifestDownload? Assets { get; set; }
-
-    /// <summary>
-    /// The URL of the manifest.
-    /// </summary>
-    [JsonPropertyName("manifest")]
-    public string? ManifestUrl { get; set; }
 
     /// <summary>
     /// A list of files or folders that should be ignored when updating/deleting/verifying this resource.
@@ -58,13 +54,15 @@ public record Manifest {
     /// Required format: `Major.Minor.Patch` (e.g. `1.0.0`)
     /// </remarks>
     [JsonPropertyName("version")]
-    public required ManifestVersion Version { get; set; }
+    [JsonRequired]
+    public ManifestVersion Version { get; set; }
 
     /// <summary>
     /// The type of the resource.
     /// </summary>
     [JsonPropertyName("type")]
-    public required string Type { get; set; }
+    [JsonRequired]
+    public string Type { get; set; }
 
     /// <summary>
     /// A list of dependencies that this plugin requires to function.
@@ -72,21 +70,25 @@ public record Manifest {
     [JsonPropertyName("relationships")]
     public Relationship[] Relationships { get; set; } = Array.Empty<Relationship>();
 
+    /// <summary>
+    /// Whether the manifest is embedded in an assembly.
+    /// </summary>
+    [JsonPropertyName("embedded")]
+    public bool Embedded { get; set; } = false;
+
     [JsonIgnore]
     public string ManifestPath { get; set; } = string.Empty;
 
     public void UpdateFile(Manifest other) {
-
         Name = other.Name;
         Assets = other.Assets;
-        ManifestUrl = other.ManifestUrl;
         IgnoredEntries = other.IgnoredEntries;
         ClearResidualFiles = other.ClearResidualFiles;
         Version = other.Version;
         Type = other.Type;
         Relationships = other.Relationships;
 
-        if (string.IsNullOrEmpty(ManifestPath))
+        if (Embedded || string.IsNullOrEmpty(ManifestPath))
             return;
 
         if (!File.Exists(ManifestPath)) {
@@ -106,7 +108,6 @@ public record Manifest {
         return Name == other.Name &&
                Id == other.Id &&
                Assets == other.Assets &&
-               ManifestUrl == other.ManifestUrl &&
                EqualityComparer<string[]?>.Default.Equals(IgnoredEntries, other.IgnoredEntries) &&
                ClearResidualFiles == other.ClearResidualFiles &&
                Version == other.Version &&
