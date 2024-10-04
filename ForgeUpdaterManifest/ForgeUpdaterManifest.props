@@ -9,6 +9,8 @@
     <PropertyGroup>
         <ManifestEmbedded Condition="'$(ManifestEmbedded)' == ''">false</ManifestEmbedded>
         <ManifestClearResidualFiles Condition="'$(ManifestClearResidualFiles)' == ''">false</ManifestClearResidualFiles>
+        <ManifestVersion Condition="'$(ManifestVersion)' == ''">$(AssemblyVersion)</ManifestVersion>
+        <ManifestVersion Condition="'$(ManifestVersion)' == ''">1.0.0</ManifestVersion>
     </PropertyGroup>
 
     <!--

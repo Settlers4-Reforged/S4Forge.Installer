@@ -99,7 +99,13 @@ public record Manifest {
     }
 
     public void Save(string path) {
-        File.WriteAllText(path, JsonSerializer.Serialize(this, new JsonSerializerOptions() { WriteIndented = true }));
+        File.WriteAllText(path,
+            JsonSerializer.Serialize(this,
+                new JsonSerializerOptions() {
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                })
+            );
     }
 
     public virtual bool Equals(Manifest? other) {
