@@ -2,6 +2,9 @@
     <PropertyGroup>
         <ManifestOutputFolder Condition="'$(ManifestOutputFolder)' == ''">$(ProjectDir)</ManifestOutputFolder>
         <ManifestOutputPath>$(ManifestOutputFolder)manifest.json</ManifestOutputPath>
+
+        <ManifestCopyFiles Condition="'$(ManifestCopyFiles)' == '' AND '$(ManifestId)' != ''">true</ManifestCopyFiles>
+        <ManifestEntryPoint Condition="'$(ManifestEntryPoint)' == '' and '$(ProjectType)' == 'Plugin'">$(TargetFileName)</ManifestEntryPoint>
     </PropertyGroup>
 
     <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
@@ -19,6 +22,9 @@
 
             ManifestOutputFolder="$(ManifestOutputFolder)"
 
+            ManifestEntryPoint="$(ManifestEntryPoint)"
+            ManifestLibraryFolder="$(ManifestLibraryFolder)"
+
             ManifestIgnoredEntries="@(ManifestIgnoredEntries)"
             ManifestRelationships="@(ManifestRelationships)">
             <Output TaskParameter="ManifestOutputPath" PropertyName="ManifestOutputPath" />
@@ -27,10 +33,12 @@
         <Message Text="Created manifest '$(ManifestId)' at: '$(ManifestOutputPath)'" Importance="high" />
     </Target>
 
-    <ItemGroup>
-        <EmbeddedResource Condition="'$(ManifestEmbedded)' == 'true'" Remove="$(ManifestOutputPath)" />
+    <!-- Add output to either embedded or general output -->
+    <ItemGroup Condition="'$(ManifestCopyFiles)' == 'true'">
+        <EmbeddedResource Condition="'$(ManifestEmbedded)' == 'true'" Remove="$(ManifestOutputPath)"/>
         <EmbeddedResource Condition="'$(ManifestEmbedded)' == 'true'" Include="$(ManifestOutputPath)">
             <LogicalName>manifest.json</LogicalName>
+            <!-- Would get the assembly name as a prefix otherwise -->
         </EmbeddedResource>
         <None Remove="$(ManifestOutputPath)"/>
         <None Include="$(ManifestOutputPath)">

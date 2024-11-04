@@ -65,6 +65,19 @@ public record Manifest {
     public string Type { get; set; }
 
     /// <summary>
+    /// Only required if the resource is a plugin.
+    /// The entry point dll file of the plugin.
+    /// </summary>
+    [JsonPropertyName("entryPoint")]
+    public string? EntryPoint { get; set; }
+
+    /// <summary>
+    /// An additional folder with other dll dependencies to add to the library search path.
+    /// </summary>
+    [JsonPropertyName("library_folder")]
+    public string? LibraryFolder { get; set; }
+
+    /// <summary>
     /// A list of dependencies that this plugin requires to function.
     /// </summary>
     [JsonPropertyName("relationships")]
@@ -86,6 +99,8 @@ public record Manifest {
         ClearResidualFiles = other.ClearResidualFiles;
         Version = other.Version;
         Type = other.Type;
+        EntryPoint = other.EntryPoint;
+        LibraryFolder = other.LibraryFolder;
         Relationships = other.Relationships;
 
         if (Embedded || string.IsNullOrEmpty(ManifestPath))
@@ -118,6 +133,9 @@ public record Manifest {
                ClearResidualFiles == other.ClearResidualFiles &&
                Version == other.Version &&
                Type == other.Type &&
+               Embedded == other.Embedded &&
+               EntryPoint == other.EntryPoint &&
+               LibraryFolder == other.LibraryFolder &&
                Relationships.SequenceEqual(other.Relationships);
     }
 }

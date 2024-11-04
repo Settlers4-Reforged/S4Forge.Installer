@@ -20,6 +20,9 @@ namespace ForgeUpdaterManifest {
         public bool ManifestClearResidualFiles { get; set; } = false;
         public bool ManifestEmbedded { get; set; } = false;
 
+        public string ManifestEntryPoint { get; set; } = null!;
+        public string ManifestLibraryFolder { get; set; } = null!;
+
         [Required]
         public string ManifestOutputFolder { get; set; } = null!;
         [Output]
@@ -58,6 +61,8 @@ namespace ForgeUpdaterManifest {
                 Version = ManifestVersion,
                 Type = ManifestType,
                 ClearResidualFiles = ManifestClearResidualFiles,
+                EntryPoint = ManifestEntryPoint,
+                LibraryFolder = ManifestLibraryFolder,
                 Assets = new ManifestDownload {
                     AssetURI = ManifestAssetUrl,
                 },

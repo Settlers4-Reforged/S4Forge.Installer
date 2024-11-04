@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Subjects;
@@ -12,8 +13,16 @@ namespace ForgeUpdateUI.Services {
     public class LoggerService : IUpdaterLogger {
         private BehaviorSubject<string> logs = new BehaviorSubject<string>("");
 
+        const string logFile = "updater.log";
+
         public LoggerService() {
             UpdaterLogger.Logger = this;
+
+
+            string applicationPath = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('/', '\\');
+            logs.Subscribe((value) => {
+                File.WriteAllText($"{applicationPath}/{logFile}", value);
+            });
         }
 
         public IObservable<string> Logs => logs;
