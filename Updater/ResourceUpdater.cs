@@ -135,10 +135,12 @@ namespace ForgeUpdater.Updater {
                 return false;
 
             foreach (string ignore in TargetManifest.IgnoredEntries) {
-                bool ignoreIsDirectory = ignore.EndsWith("/");
+                string sanitizedIgnore = ignore.Replace('\\', '/');
+                bool ignoreIsDirectory = sanitizedIgnore.EndsWith("/");
 
                 if (ignoreIsDirectory) {
-                    if (file.StartsWith(ignore, StringComparison.InvariantCultureIgnoreCase))
+                    string sanitizedFile = file.Replace("\\", "/");
+                    if (sanitizedFile.StartsWith(sanitizedIgnore, StringComparison.InvariantCultureIgnoreCase))
                         return true;
                 } else {
                     if (string.Equals(file, ignore, StringComparison.InvariantCultureIgnoreCase))

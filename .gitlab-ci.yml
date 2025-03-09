@@ -4,5 +4,5 @@ include:
     file: '/shared.gitlab-ci.yml'
 
 variables:
-  PACKAGE_NAME: ForgeUpdaterManifest
-  PACKAGE_FOLDER: ForgeUpdaterManifest
+  PACKAGE_NAME: ForgeSDK
+  PACKAGE_FOLDER: ForgeSDK

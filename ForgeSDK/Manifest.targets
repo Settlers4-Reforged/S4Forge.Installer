@@ -7,8 +7,12 @@
         <ManifestEntryPoint Condition="'$(ManifestEntryPoint)' == '' and '$(ProjectType)' == 'Plugin'">$(TargetFileName)</ManifestEntryPoint>
     </PropertyGroup>
 
-    <!-- See https://aka.ms/dotnet/msbuild/customize for more details on customizing your build -->
-    <Target Name="GenerateManifest" BeforeTargets="CoreCompile" Condition="'$(ManifestId)' != ''" Outputs="$(ManifestOutputPath)">
+    <Target Name="ManifestCheckup">
+        <Warning Condition="'$(ManifestId)' == ''" Text="The manifest id is not set. The manifest will not be generated."/>
+    </Target>
+
+    <!-- Generate the manifest.json based on project definitions -->
+    <Target Name="GenerateManifest" Condition="'$(ManifestId)' != ''" BeforeTargets="PostBuildEvent" Outputs="$(ManifestOutputPath)">
         <Message Text="Creating manifest with id: '$(ManifestId)' at: '$(ManifestOutputFolder)'" Importance="high" />
 
         <CreateManifestTask

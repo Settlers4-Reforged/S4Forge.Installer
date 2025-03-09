@@ -10,11 +10,11 @@
 
     <PropertyGroup>
         <!--NuGet Package settings:-->
-        <Title>ForgeUpdaterManifest</Title>
-        <PackageId>ForgeUpdaterManifest</PackageId>
+        <Title>ForgeSDK</Title>
+        <PackageId>ForgeSDK</PackageId>
         <Authors>WizzardMaker</Authors>
         <Description>
-            Build scripts for ForgeUpdater manifest generation
+            Build scripts and helper for generating Forge manifests and installing files into the S4 directory
         </Description>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <PackageOutputPath>$(SolutionDir)BUILD\NuGet\</PackageOutputPath>
@@ -22,7 +22,7 @@
         <Version>$(AssemblyVersion)</Version>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 
-        <RepositoryUrl>http://gitlab.settlers4-hd.com/s4-plugins/modapi/s4forgeupdater.git</RepositoryUrl>
+        <RepositoryUrl>http://gitlab.settlers4-hd.com/s4-plugins/modapi/s4forgesdk.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
@@ -33,51 +33,33 @@
         <NoWarn>NU5100</NoWarn>
         <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 
-
         <GenerateDependencyFile>true</GenerateDependencyFile>
     </PropertyGroup>
 
-    <!-- This is the target we defined above. It's purpose is to add all of our PackageReference and ProjectReference's runtime assets to our package output.  -->
-    <Target
-        Name="CopyProjectReferencesToPackage"
-        DependsOnTargets="ResolveReferences">
+    <!-- This is the target we defined above. Its purpose is to add all of our PackageReference and ProjectReference's runtime assets to our package output.  -->
+    <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
         <ItemGroup>
             <!-- The TargetPath is the path inside the package that the source file will be placed. This is already precomputed in the ReferenceCopyLocalPaths items' DestinationSubPath, so reuse it here. -->
-            <BuildOutputInPackage
-                Include="@(ReferenceCopyLocalPaths)"
-                TargetPath="%(ReferenceCopyLocalPaths.DestinationSubPath)" />
+            <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths)" TargetPath="%(ReferenceCopyLocalPaths.DestinationSubPath)" />
         </ItemGroup>
     </Target>
 
     <!-- This target adds the generated deps.json file to our package output -->
-    <Target
-        Name="AddBuildDependencyFileToBuiltProjectOutputGroupOutput"
-        BeforeTargets="BuiltProjectOutputGroup"
-        Condition=" '$(GenerateDependencyFile)' == 'true'">
-
+    <Target Name="AddBuildDependencyFileToBuiltProjectOutputGroupOutput" BeforeTargets="BuiltProjectOutputGroup" Condition=" '$(GenerateDependencyFile)' == 'true'">
         <ItemGroup>
-            <BuiltProjectOutputGroupOutput
-                Include="$(ProjectDepsFilePath)"
-                TargetPath="$(ProjectDepsFileName)"
-                FinalOutputPath="$(ProjectDepsFilePath)" />
+            <BuiltProjectOutputGroupOutput Include="$(ProjectDepsFilePath)" TargetPath="$(ProjectDepsFileName)" FinalOutputPath="$(ProjectDepsFilePath)" />
         </ItemGroup>
     </Target>
 
     <ItemGroup>
-        <Content Include="ForgeUpdaterManifest.targets" PackagePath="build\" />
-        <Content Include="ForgeUpdaterManifest.props" PackagePath="build\" />
+        <Content Include="Manifest.targets" PackagePath="build\" />
+        <Content Include="Manifest.props" PackagePath="build\" />
+        <Content Include="ForgeSDK.targets" PackagePath="build\" />
+        <Content Include="ForgeSDK.props" PackagePath="build\" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Build.Utilities.Core"
-                          Version="17.11.4"
-                          PrivateAssets="all"
-                          ExcludeAssets="Runtime" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference
-            Include="..\ForgeUpdater.csproj"
-            PrivateAssets="all" />
+        <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.11.4" PrivateAssets="all" ExcludeAssets="Runtime" />
+        <ProjectReference Include="..\ForgeUpdater.csproj" PrivateAssets="all" />
     </ItemGroup>
 </Project>

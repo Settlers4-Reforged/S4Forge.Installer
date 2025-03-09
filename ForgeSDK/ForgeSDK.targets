@@ -1,0 +1,129 @@
+﻿<Project>
+
+    <!-- Fetch the game folder from the registry -->
+    <Target Condition="'$(IsLocalBuild)' == 'true'" 
+            Name="FetchGameFolder" >
+        <PropertyGroup>
+            <PowerShellExe>C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe</PowerShellExe>
+            <UbiS4Key>SOFTWARE\WOW6432Node\Ubisoft\Launcher\Installs\11785\</UbiS4Key>
+            <FetchPathCommand>Get-ItemProperty -Path HKLM:\$(UbiS4Key) -Name InstallDir | Select-Object -ExpandProperty InstallDir</FetchPathCommand>
+        </PropertyGroup>
+        
+        <!-- Skip the fetch if a manual folder was specified -->
+        <Exec Condition="'$(GameFolder)'==''" ConsoleToMSBuild="true" Command="$(PowerShellExe) -NonInteractive -executionpolicy Unrestricted -command &quot;&amp; { $(FetchPathCommand) } &quot;">
+            <Output TaskParameter="ConsoleOutput" PropertyName="GameFolder"/>
+        </Exec>
+    </Target>
+
+    <Target Name="KillGameProcess">
+        <PropertyGroup>
+            <MaxTries>2</MaxTries>
+            <!-- Expanded version of the command:
+                    $Counter = $(MaxTries)
+                    # Wait for the process to exit
+                    while ($Counter -gt 0 -And  $(Get-Process S4_Main -ErrorAction SilentlyContinue)) {
+                        Start-Sleep -Seconds 1;
+	                    taskkill /IM "S4_Main.exe" /F > $null 2> $null;
+	                    $Counter = $Counter - 1;
+                    }
+                    if ($Counter -eq 0) {
+                        exit 1
+                    }
+            -->
+            <KillProcessCommand>$Counter = $(MaxTries);while (%24Counter -gt 0 -And  %24(Get-Process S4_Main -ErrorAction SilentlyContinue)) {Start-Sleep -Seconds 1;taskkill /IM "S4_Main.exe" /F > %24null 2> %24null;%24Counter = %24Counter - 1;}if (%24Counter -eq 0) {exit 0;}</KillProcessCommand>
+        </PropertyGroup>
+        <Exec
+            ConsoleToMSBuild="true"
+            Command="$(PowerShellExe) -NonInteractive -executionpolicy Unrestricted -command &quot;&amp; { $(KillProcessCommand) } &quot;">
+        </Exec>
+        <Message Text="Killed S4_Main process" Importance="high"/>
+    </Target>
+
+    <!-- Check all necessary properties are set: -->
+    <Target Name="ExportPreconditionCheck" DependsOnTargets="FetchGameFolder">
+        <Message Text="GameFolder: $(GameFolder)" Importance="high"/>
+        <!-- Error our, when the GameFolder directory does not exist -->
+        <Error Condition="!Exists('$(GameFolder)')" Text="GameFolder directory does not exist: &quot;$(GameFolder)&quot;" />
+
+
+        <Message Text="ProjectType: $(ProjectType)" Importance="high"/>
+
+    </Target>
+
+
+    <!-- 
+    ##############################
+    # Prepare export environment #
+    ##############################
+    -->
+    
+    <!-- List of common target dependencies -->
+    <Target Name="CommonDependencies" DependsOnTargets="ExportPreconditionCheck;KillGameProcess">
+        <PropertyGroup>
+            <GamePath>$(GameFolder.Trim("/"))</GamePath>
+        </PropertyGroup>
+    </Target>
+    
+    <!-- ###### Plugin ###### -->
+    <Target Condition="'$(ProjectType)' == 'Plugin'" Name="ExportPlugin" DependsOnTargets="CommonDependencies" AfterTargets="PostBuildEvent">
+        <PropertyGroup>
+            <!-- Default Plugin build settings-->
+            <PluginFolderName Condition="'$(PluginFolderName)' == ''">$(TargetName)</PluginFolderName>
+            <PluginFileName Condition="'$(PluginFileName)' == ''">$(TargetFileName)</PluginFileName>
+
+            <PluginConfigFile Condition="'$(PluginConfigFile)' == ''">$(ProjectDir)\manifest.json</PluginConfigFile>
+
+            <TargetExportPath>$(GamePath)/$(PluginExportPath)/$(PluginFolderName)</TargetExportPath>
+            <!--<TargetExportFile>$(TargetExportPath)/$(PluginFileName)</TargetExportFile>-->
+        </PropertyGroup>
+
+        <ItemGroup>
+            <!-- Copy the manifest file to game folder: -->
+            <ExportFile Include="$(PluginConfigFile)"/>
+        </ItemGroup>
+
+        <Error Condition="!Exists($(PluginConfigFile))" Text="Plugin Manifest ($(PluginConfigFile)) not found!"/>
+        
+        <Message Text="Exporting plugin to: $(TargetExportPath)" Importance="high"/>
+    </Target>
+
+    <!-- ###### Engine ###### -->
+    <Target Condition="'$(ProjectType)' == 'Engine'" Name="ExportEngine" DependsOnTargets="CommonDependencies">
+        <PropertyGroup>
+            <TargetExportPath Condition="'$(TargetExportPath)' == ''">$(GamePath)/$(EngineExportPath)</TargetExportPath>
+        </PropertyGroup>
+
+        <Message Text="Exporting engine to: $(TargetExportPath)" Importance="high"/>
+    </Target>
+
+    <!-- ###### Bootstrap ###### -->
+    <Target Condition="'$(ProjectType)' == 'Bootstrap'" Name="ExportBootstrap" DependsOnTargets="CommonDependencies">
+        <PropertyGroup>
+            <TargetExportPath Condition="'$(TargetExportPath)' == ''">$(GamePath)/$(BootstrapExportPath)</TargetExportPath>
+        </PropertyGroup>
+
+        <Message Text="Exporting engine to: $(TargetExportPath)" Importance="high"/>
+    </Target>
+
+    <!-- ###### Forge ###### -->
+    <Target Condition="'$(ProjectType)' == 'Forge'" Name="ExportForge" DependsOnTargets="CommonDependencies">
+        <PropertyGroup>
+            <TargetExportPath Condition="'$(TargetExportPath)' == ''">$(GamePath)/$(ForgeExportPath)</TargetExportPath>
+        </PropertyGroup>
+
+        <Message Text="Exporting engine to: $(TargetExportPath)" Importance="high"/>
+    </Target>
+
+    <!--
+    #######################################
+    # Export the files to the game folder #
+    #######################################
+    -->
+    
+    <Target Condition="'$(ExportToS4)' == 'true' And '$(ProjectType)' != ''" Name="Export" DependsOnTargets="Export$(ProjectType)"  AfterTargets="PostBuildEvent">
+        <Message Text="Exporting ExportFile: @(ExportFile) to: $(TargetExportPath)%(ExportFile.ExportFileDir)" Importance="high"/>
+        <Copy SourceFiles="@(ExportFile)" DestinationFolder="$(TargetExportPath)%(ExportFile.ExportFileDir)\%(RecursiveDir)" SkipUnchangedFiles="True" />
+    </Target>
+
+    <Import Project="$(MSBuildThisFileDirectory)Manifest.targets"/>
+</Project>

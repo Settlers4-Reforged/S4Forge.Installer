@@ -74,7 +74,7 @@ public record Manifest {
     /// <summary>
     /// An additional folder with other dll dependencies to add to the library search path.
     /// </summary>
-    [JsonPropertyName("library_folder")]
+    [JsonPropertyName("libraryFolder")]
     public string? LibraryFolder { get; set; }
 
     /// <summary>

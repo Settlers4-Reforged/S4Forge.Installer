@@ -93,12 +93,15 @@ namespace ForgeUpdaterTests {
             File.WriteAllText(Path.Combine(testPath, "S4Forge.log"), "Test");
             File.WriteAllText(Path.Combine(testPath, "S4Forge-important.txt"), "Test");
 
+            Directory.CreateDirectory(Path.Combine(testPath, "testFolder"));
+            File.WriteAllText(Path.Combine(testPath, "testFolder", "S4Forge-folder.txt"), "Test");
+
             Manifest manifest = new Manifest() {
                 Id = "S4Forge",
                 Name = "S4Forge",
                 Version = new ManifestVersion("1.0.0"),
                 Type = "test",
-                IgnoredEntries = new[] { "s4forge-important.txt" },
+                IgnoredEntries = new[] { "s4forge-important.txt", "testFolder/" },
                 ClearResidualFiles = true,
                 Assets = new ManifestDownload() {
                     AssetURI = zipPath
@@ -115,6 +118,7 @@ namespace ForgeUpdaterTests {
 
             Assert.That(File.Exists(Path.Combine(testPath, "S4Forge.log")), Is.False);
             Assert.That(File.Exists(Path.Combine(testPath, "S4Forge-important.txt")), Is.True);
+            Assert.That(File.Exists(Path.Combine(testPath, "testFolder", "S4Forge-folder.txt")), Is.True);
 
             try {
                 Directory.Delete(testPath, true);

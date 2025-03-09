@@ -9,13 +9,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Remove="ForgeUpdaterManifest\**" />
+        <Compile Remove="ForgeSDK\**" />
         <Compile Remove="ForgeUpdaterTests\**" />
         <Compile Remove="ForgeUpdateUI\**" />
-        <EmbeddedResource Remove="ForgeUpdaterManifest\**" />
+        <EmbeddedResource Remove="ForgeSDK\**" />
         <EmbeddedResource Remove="ForgeUpdaterTests\**" />
         <EmbeddedResource Remove="ForgeUpdateUI\**" />
-        <None Remove="ForgeUpdaterManifest\**" />
+        <None Remove="ForgeSDK\**" />
         <None Remove="ForgeUpdaterTests\**" />
         <None Remove="ForgeUpdateUI\**" />
     </ItemGroup>
