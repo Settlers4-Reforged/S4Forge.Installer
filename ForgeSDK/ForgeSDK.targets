@@ -65,13 +65,14 @@
     </Target>
     
     <!-- ###### Plugin ###### -->
-    <Target Condition="'$(ProjectType)' == 'Plugin'" Name="ExportPlugin" DependsOnTargets="CommonDependencies" AfterTargets="PostBuildEvent">
+    <Target Condition="'$(ProjectType)' == 'Plugin'" Name="ExportPlugin" DependsOnTargets="CommonDependencies">
         <PropertyGroup>
             <!-- Default Plugin build settings-->
             <PluginFolderName Condition="'$(PluginFolderName)' == ''">$(TargetName)</PluginFolderName>
             <PluginFileName Condition="'$(PluginFileName)' == ''">$(TargetFileName)</PluginFileName>
 
             <PluginConfigFile Condition="'$(PluginConfigFile)' == ''">$(ProjectDir)\manifest.json</PluginConfigFile>
+            <ExportConfigFile Condition="'$(ManifestEmbedded)' != 'true'">true</ExportConfigFile>
 
             <TargetExportPath>$(GamePath)/$(PluginExportPath)/$(PluginFolderName)</TargetExportPath>
             <!--<TargetExportFile>$(TargetExportPath)/$(PluginFileName)</TargetExportFile>-->
@@ -79,12 +80,12 @@
 
         <ItemGroup>
             <!-- Copy the manifest file to game folder: -->
-            <ExportFile Include="$(PluginConfigFile)"/>
+            <ExportFile Condition="'$(ExportConfigFile)' == 'true'" Include="$(PluginConfigFile)"/>
         </ItemGroup>
 
-        <Error Condition="!Exists($(PluginConfigFile))" Text="Plugin Manifest ($(PluginConfigFile)) not found!"/>
-        
-        <Message Text="Exporting plugin to: $(TargetExportPath)" Importance="high"/>
+        <Error Condition="!Exists($(PluginConfigFile)) And '$(ExportConfigFile)' == 'true'" Text="Plugin Manifest ($(PluginConfigFile)) not found!"/>
+
+        <Message Condition="'$(ExportConfigFile)' == 'true'" Text="Exporting plugin to: $(TargetExportPath)" Importance="high"/>
     </Target>
 
     <!-- ###### Engine ###### -->
