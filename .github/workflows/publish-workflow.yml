@@ -1,0 +1,56 @@
+name: Publish to nuget
+
+on:
+  workflow_call:
+    inputs:
+      package_name:
+        type: string
+        required: true
+      package_folder:
+        type: string
+        default: .
+      package_path:
+        type: string
+      version:
+        type: string
+        default: ${{github.ref_name}}
+      nuget_repo:
+        type: string
+        default: https://nuget.pkg.github.com/Settlers-4-Reforged/index.json
+
+jobs:
+  publish:
+    name: Publish build
+    runs-on: windows-latest
+    steps:
+      ## SETUP ##
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x
+      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v2
+      - id: goto-project
+        run: cd ${{inputs.package_folder}}
+      ## BUILD ##
+      - name: Restore
+        run: msbuild -t:restore
+      - name: Build for version [${{inputs.version}}] 
+        run: msbuild -t:clean,build -p:Configuration=Release -p:AssemblyVersion=${{inputs.version}}
+      ## NUGET PUBLISH ##
+      - name: Package
+        run: msbuild -t:pack -p:Configuration=Release -p:AssemblyVersion=${{inputs.version}}
+      - name: Publish
+        run: | 
+          $packagePath = "${{ inputs.package_path }}"
+          if (-not $packagePath) {
+            $packagePath = "BUILD/NuGet/${{ inputs.package_name }}.${{ inputs.version }}"
+          }
+          echo '<?xml version="1.0" encoding="utf-8"?><configuration></configuration>' | Out-File -Encoding UTF8 "./Upload.Nuget.Config"
+          nuget sources add -Source "${{inputs.nuget_repo}}" -Name github -Username CI -Password ${{secrets.GITHUB_TOKEN}} -StorePasswordInClearText -ConfigFile "./Upload.Nuget.Config"
+          nuget push "${packagePath}.nupkg" -Source github -ConfigFile "./Upload.Nuget.Config"
