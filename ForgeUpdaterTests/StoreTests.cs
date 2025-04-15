@@ -40,9 +40,13 @@ namespace ForgeUpdaterTests {
 
             var output = baseStore.CheckForUpdatesWith(updateStore).ToList();
 
-            Assert.That(output, Has.Count.EqualTo(1));
-            Assert.That(output, Has.Exactly(1).Matches<(Manifest input, Manifest update)>((i) =>
-                i.input.Id == "test" && i.update.Id == "test" && i.update.Version == new ManifestVersion("1.1.0")));
+            Assert.That(output, Has.Count.EqualTo(2));
+            Assert.That(output, Has.Exactly(1).Matches<(Manifest? input, Manifest update)>((i) =>
+                i.input?.Id == "test" && i.update.Id == "test" && i.update.Version == new ManifestVersion("1.1.0")));
+
+
+            Assert.That(output, Has.Exactly(1).Matches<(Manifest? input, Manifest update)>((i) =>
+                i.input == null && i.update.Id == "test-alternative" && i.update.Version == new ManifestVersion("1.1.0")));
         }
     }
 }
