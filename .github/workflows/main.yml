@@ -1,0 +1,14 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  publish-to-nuget:
+    uses: Settlers-4-Reforged/S4ForgeSDK/.github/workflows/publish-workflow.yml@main
+    with:
+      package_name: ForgeSDK
+      package_folder: ForgeSDK
+    secrets: inherit
