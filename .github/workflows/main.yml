@@ -9,6 +9,6 @@ jobs:
   publish-to-nuget:
     uses: Settlers-4-Reforged/S4ForgeSDK/.github/workflows/publish-workflow.yml@main
     with:
-      package_name: ForgeSDK
+      package_name: S4Forge.SDK
       package_folder: ForgeSDK
     secrets: inherit

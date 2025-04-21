@@ -2,6 +2,10 @@ name: Publish to nuget
 
 on:
   workflow_call:
+    secrets:
+      nuget_key:
+        required: true
+        description: Key to Nuget Repository
     inputs:
       package_name:
         type: string
@@ -16,7 +20,7 @@ on:
         default: ${{github.ref_name}}
       nuget_repo:
         type: string
-        default: https://nuget.pkg.github.com/Settlers-4-Reforged/index.json
+        default: https://api.nuget.org/v3/index.json
 
 jobs:
   publish:
@@ -52,7 +56,6 @@ jobs:
           $packagePath = "${{ inputs.package_path }}"
           if (-not $packagePath) {
             $packagePath = "BUILD/NuGet/${{ inputs.package_name }}.${{ inputs.version }}"
+            echo "No package path specified, using '${packagePath}' as default"
           }
-          echo '<?xml version="1.0" encoding="utf-8"?><configuration></configuration>' | Out-File -Encoding UTF8 "./Upload.Nuget.Config"
-          nuget sources add -Source "${{inputs.nuget_repo}}" -Name github -Username CI -Password ${{secrets.GITHUB_TOKEN}} -StorePasswordInClearText -ConfigFile "./Upload.Nuget.Config"
-          nuget push "${packagePath}.nupkg" -Source github -ConfigFile "./Upload.Nuget.Config"
+          dotnet nuget push "${packagePath}.nupkg" --api-key ${{ secrets.nuget_key }} --source ${{ inputs.nuget_repo }}

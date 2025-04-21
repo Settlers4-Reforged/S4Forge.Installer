@@ -10,8 +10,8 @@
 
     <PropertyGroup>
         <!--NuGet Package settings:-->
-        <Title>ForgeSDK</Title>
-        <PackageId>ForgeSDK</PackageId>
+        <Title>S4Forge SDK</Title>
+        <PackageId>S4Forge.SDK</PackageId>
         <Authors>WizzardMaker</Authors>
         <Description>
             Build scripts and helper for generating Forge manifests and installing files into the S4 directory
@@ -22,7 +22,7 @@
         <Version>$(AssemblyVersion)</Version>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 
-        <RepositoryUrl>http://gitlab.settlers4-hd.com/s4-plugins/modapi/s4forgesdk.git</RepositoryUrl>
+        <RepositoryUrl>https://github.com/Settlers-4-Reforged/S4ForgeSDK</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
