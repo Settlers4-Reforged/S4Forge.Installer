@@ -22,7 +22,7 @@
         <Version>$(AssemblyVersion)</Version>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 
-        <RepositoryUrl>https://github.com/Settlers-4-Reforged/S4ForgeSDK</RepositoryUrl>
+        <RepositoryUrl>https://github.com/Settlers-4-Reforged/S4Forge.SDK</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
