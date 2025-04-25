@@ -89,6 +89,12 @@ public record Manifest {
     [JsonPropertyName("embedded")]
     public bool Embedded { get; set; } = false;
 
+    /// <summary>
+    /// Any overflow data that is not handled in the base manifest file
+    /// </summary>
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement>? ExtensionData { get; set; }
+
     [JsonIgnore]
     public string ManifestPath { get; set; } = string.Empty;
 
