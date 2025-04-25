@@ -7,7 +7,7 @@ on:
 
 jobs:
   publish-to-nuget:
-    uses: Settlers-4-Reforged/S4Forge.SDK/.github/workflows/publish-workflow.yml@main
+    uses: Settlers4-Reforged/S4Forge.SDK/.github/workflows/publish-workflow.yml@main
     with:
       package_name: S4Forge.SDK
       package_folder: ForgeSDK
