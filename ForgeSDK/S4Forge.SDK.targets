@@ -64,28 +64,28 @@
         </PropertyGroup>
     </Target>
     
-    <!-- ###### Plugin ###### -->
-    <Target Condition="'$(ProjectType)' == 'Plugin'" Name="ExportPlugin" DependsOnTargets="CommonDependencies">
+    <!-- ###### Module ###### -->
+    <Target Condition="'$(ProjectType)' == 'Module'" Name="ExportModule" DependsOnTargets="CommonDependencies">
         <PropertyGroup>
-            <!-- Default Plugin build settings-->
-            <PluginFolderName Condition="'$(PluginFolderName)' == ''">$(TargetName)</PluginFolderName>
-            <PluginFileName Condition="'$(PluginFileName)' == ''">$(TargetFileName)</PluginFileName>
+            <!-- Default Module build settings-->
+            <ModuleFolderName Condition="'$(ModuleFolderName)' == ''">$(TargetName)</ModuleFolderName>
+            <ModuleFileName Condition="'$(ModuleFileName)' == ''">$(TargetFileName)</ModuleFileName>
 
-            <PluginConfigFile Condition="'$(PluginConfigFile)' == ''">$(ProjectDir)\manifest.json</PluginConfigFile>
+            <ModuleConfigFile Condition="'$(ModuleConfigFile)' == ''">$(ProjectDir)\manifest.json</ModuleConfigFile>
             <ExportConfigFile Condition="'$(ManifestEmbedded)' != 'true'">true</ExportConfigFile>
 
-            <TargetExportPath>$(GamePath)/$(PluginExportPath)/$(PluginFolderName)</TargetExportPath>
-            <!--<TargetExportFile>$(TargetExportPath)/$(PluginFileName)</TargetExportFile>-->
+            <TargetExportPath>$(GamePath)/$(ModuleExportPath)/$(ModuleFolderName)</TargetExportPath>
+            <!--<TargetExportFile>$(TargetExportPath)/$(ModuleFileName)</TargetExportFile>-->
         </PropertyGroup>
 
         <ItemGroup>
             <!-- Copy the manifest file to game folder: -->
-            <ExportFile Condition="'$(ExportConfigFile)' == 'true'" Include="$(PluginConfigFile)"/>
+            <ExportFile Condition="'$(ExportConfigFile)' == 'true'" Include="$(ModuleConfigFile)"/>
         </ItemGroup>
 
-        <Error Condition="!Exists($(PluginConfigFile)) And '$(ExportConfigFile)' == 'true'" Text="Plugin Manifest ($(PluginConfigFile)) not found!"/>
+        <Error Condition="!Exists($(ModuleConfigFile)) And '$(ExportConfigFile)' == 'true'" Text="Module Manifest ($(ModuleConfigFile)) not found!"/>
 
-        <Message Condition="'$(ExportConfigFile)' == 'true'" Text="Exporting plugin to: $(TargetExportPath)" Importance="high"/>
+        <Message Condition="'$(ExportConfigFile)' == 'true'" Text="Exporting module to: $(TargetExportPath)" Importance="high"/>
     </Target>
 
     <!-- ###### Engine ###### -->

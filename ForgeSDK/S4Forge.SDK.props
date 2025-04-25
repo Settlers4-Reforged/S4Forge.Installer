@@ -12,7 +12,7 @@
 
         <!--
         Possible values:
-        - Plugin
+        - Module
         - Engine
         - Bootstrap // Reserved for the main project
         - Forge // Reserved for the main project
@@ -20,7 +20,7 @@
         <ProjectType Condition="'$(ProjectType)' == ''"></ProjectType>
 
         <BaseExportPath>plugins</BaseExportPath>
-        <PluginExportPath>$(BaseExportPath)</PluginExportPath>
+        <ModuleExportPath>$(BaseExportPath)/Modules</ModuleExportPath>
         <EngineExportPath>$(BaseExportPath)/Forge/Engines</EngineExportPath>
         <BootstrapExportPath>$(BaseExportPath)</BootstrapExportPath>
         <ForgeExportPath>$(BaseExportPath)/Forge</ForgeExportPath>
@@ -34,7 +34,7 @@
         <ExportFile Include="$(TargetPath)">
             <!-- 
                 ExportFileDir is relative to the chose ExportPath from the ProjectType
-                e.g. $(PluginExportPath)/$(ExportFileDir)
+                e.g. $(ModuleExportPath)/$(ExportFileDir)
             -->
             <ExportFileDir></ExportFileDir>
         </ExportFile>

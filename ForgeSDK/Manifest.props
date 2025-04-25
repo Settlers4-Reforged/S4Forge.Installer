@@ -23,7 +23,7 @@
         <ManifestId>The id of the resource - needs to be unique for the type of resource and shared across all version</ManifestId>
         <ManifestName>The name of the resource</ManifestName>
         <ManifestVersion>SemVer of the resource, defaults to $(AssemblyVersion)</ManifestVersion>
-        <ManifestType>What type of resource this is, e.g. plugin, engine, base, etc.</ManifestType>
+        <ManifestType>What type of resource this is, e.g. plugin, engine, base, etc. defaults to $(ProjectType)</ManifestType>
         <ManifestAssetUrl>Url to download release output assets, e.g. gitlab release url</ManifestAssetUrl>
         <ManifestClearResidualFiles>Whether to delete any files in the output folder (be careful to not set to true, when other files should be kept)</ManifestClearResidualFiles>
         <ManifestEmbedded>Whether this file should be embedded in the assembly or not</ManifestEmbedded>
