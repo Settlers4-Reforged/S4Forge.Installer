@@ -54,8 +54,8 @@
     <ItemGroup>
         <Content Include="Manifest.targets" PackagePath="build\" />
         <Content Include="Manifest.props" PackagePath="build\" />
-        <Content Include="ForgeSDK.targets" PackagePath="build\" />
-        <Content Include="ForgeSDK.props" PackagePath="build\" />
+        <Content Include="S4Forge.SDK.targets" PackagePath="build\" />
+        <Content Include="S4Forge.SDK.props" PackagePath="build\" />
     </ItemGroup>
 
     <ItemGroup>
