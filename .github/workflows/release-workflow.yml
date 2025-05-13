@@ -9,6 +9,12 @@ on:
       package_folder:
         type: string
         default: . 
+      multi-stage:
+        type: boolean
+        description: |
+          If true, the release will be created in multiple stages
+          e.g. the release will be created as draft with the version number and under a "latest" tag
+        default: true
 
 jobs:
   release:
@@ -53,4 +59,17 @@ jobs:
           body: |
             Release for version [${{inputs.version}}]
           generate_release_notes: true
+          draft: ${{ inputs.multi-stage }}
+      - name: Publish GitHub Release
+        id: publish_latest
+        uses: softprops/action-gh-release@v1
+        if: ${{ inputs.multi-stage }}
+        with:
+          tag_name: release/latest
+          name: Latest
+          files: BUILD/Release/*
+          body: |
+            Release for version [${{inputs.version}}]
+          generate_release_notes: true
+          prerelease: ${{ inputs.multi-stage }}
           token: ${{ secrets.GITHUB_TOKEN }}
