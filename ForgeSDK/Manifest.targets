@@ -18,7 +18,7 @@
 
             <!-- If no Repository is set (often with modules outside of the pipeline) -->
             <ManifestAssetUrl Condition="'$(ManifestAssetUrl)' == '' AND '$(RepositoryUrl)' == ''">$(ReleaseOutputPath)</ManifestAssetUrl>
-            <ManifestAssetUrl Condition="'$(ManifestAssetUrl)' == ''">$(RepositoryUrl)/releases/download/latest/$(ReleaseFile)</ManifestAssetUrl>
+            <ManifestAssetUrl Condition="'$(ManifestAssetUrl)' == ''">$(RepositoryUrl)/releases/latest/download/$(ReleaseFile)</ManifestAssetUrl>
         </PropertyGroup>
 
         <Message Text="Creating manifest with id: '$(ManifestId)' at: '$(ManifestOutputFolder)'" Importance="high" />
