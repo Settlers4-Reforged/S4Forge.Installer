@@ -127,4 +127,5 @@
     </Target>
 
     <Import Project="$(MSBuildThisFileDirectory)Manifest.targets"/>
+    <Import Project="$(MSBuildThisFileDirectory)Release.targets"/>
 </Project>

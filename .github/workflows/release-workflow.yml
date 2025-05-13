@@ -1,0 +1,56 @@
+name: Release package
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        default: ${{github.ref_name}}
+      package_folder:
+        type: string
+        default: . 
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: windows-latest
+    steps:
+      ## SETUP ##
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.x
+      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v2
+      ## BUILD ##
+      - name: Restore
+        working-directory: ${{inputs.package_folder}}
+        run: msbuild -t:restore
+      - name: Build for version [${{inputs.version}}] 
+        working-directory: ${{inputs.package_folder}}
+        # Set RepositoryUrl for the manifest build here
+        # This ensures that even the embedded manifest.json is created with the correct URL
+        run: msbuild -t:clean,build -p:RepositoryUrl=${{ github.server_url }}/${{ github.repository }} -p:Configuration=Release -p:AssemblyVersion=${{inputs.version}}
+      ## CREATE RELEASE ##
+      - name: Create release for version [${{inputs.version}}] 
+        working-directory: ${{inputs.package_folder}}
+        # TargetFramework is needed here, because msbuild would otherwise not find the SDK targets
+        run: msbuild -t:Release -p:TargetFramework=.net8.0-windows7.0 -p:Configuration=Release -p:AssemblyVersion=${{inputs.version}}
+        # Outputs to path BUILD\Release\
+        # Contains manifest.json and release zip
+      ## PUBLISH ##
+      - name: Publish GitHub Release
+        id: publish_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{inputs.version}}
+          files: BUILD/Release/*
+          body: |
+            Release for version [${{inputs.version}}]
+          generate_release_notes: true
+          token: ${{ secrets.GITHUB_TOKEN }}

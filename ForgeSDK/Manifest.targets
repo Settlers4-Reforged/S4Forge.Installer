@@ -15,6 +15,10 @@
     <Target Name="GenerateManifest" Condition="'$(ManifestId)' != ''" BeforeTargets="PostBuildEvent" Outputs="$(ManifestOutputPath)">
         <PropertyGroup>
             <ManifestType Condition="'$(ManifestType)' == ''">$(ProjectType)</ManifestType>
+
+            <!-- If no Repository is set (often with modules outside of the pipeline) -->
+            <ManifestAssetUrl Condition="'$(ManifestAssetUrl)' == '' AND '$(RepositoryUrl)' == ''">$(ReleaseOutputPath)</ManifestAssetUrl>
+            <ManifestAssetUrl Condition="'$(ManifestAssetUrl)' == ''">$(RepositoryUrl)/releases/download/latest/$(ReleaseFile)</ManifestAssetUrl>
         </PropertyGroup>
 
         <Message Text="Creating manifest with id: '$(ManifestId)' at: '$(ManifestOutputFolder)'" Importance="high" />

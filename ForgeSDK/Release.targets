@@ -1,0 +1,26 @@
+<Project>
+  <PropertyGroup>
+    <ReleaseVersion>$(AssemblyVersion)</ReleaseVersion>
+    <ReleaseVersion Condition="'$(ReleaseVersion)' == ''">1.0.0</ReleaseVersion>
+
+    <ReleaseName Condition="'$(ReleaseName)' == ''">$(TargetName)</ReleaseName>
+    <ReleaseFile>$(ReleaseName).$(ReleaseVersion).zip</ReleaseFile>
+
+    <ReleasePath>$(ProjectDir)BUILD\Release\</ReleasePath>
+    <ReleaseOutputPath>$(ReleasePath)\$(ReleaseName)</ReleaseOutputPath>
+  </PropertyGroup>
+
+
+  <Target Name="Release">
+    <Message Text="Exporting ExportFile: @(ExportFile) to: $(ReleasePath)%(ExportFile.ExportFileDir)" Importance="high"/>
+
+    <RemoveDir Condition="Exists('$(ReleasePath)')" Directories="$(ReleasePath)" />
+
+    <Copy SourceFiles="@(ExportFile)" DestinationFolder="$(ReleaseOutputPath)%(ExportFile.ExportFileDir)\%(RecursiveDir)" SkipUnchangedFiles="True" />
+    
+    <ZipDirectory SourceDirectory="$(ReleaseOutputPath)" DestinationFile="$(ReleasePath)$(ReleaseFile)"/>
+
+    <RemoveDir Condition="Exists('$(ReleaseOutputPath)')" Directories="$(ReleaseOutputPath)" />
+    <Copy SourceFiles="$(ManifestOutputPath)" DestinationFolder="$(ReleasePath)" />
+  </Target>
+</Project>
