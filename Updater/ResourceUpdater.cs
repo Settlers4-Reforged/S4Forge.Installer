@@ -27,17 +27,16 @@ namespace ForgeUpdater.Updater {
 
         public IEnumerable<float> Update() {
             using ZipArchive zip = ZipFile.OpenRead(UpdateZip);
-            HandleActionScript(zip);
 
+            Directory.CreateDirectory(TargetFolder);
+
+            HandleActionScript(zip);
 
             if (Directory.Exists(TargetFolder)) {
                 if (ShouldClearResidualFiles) {
                     ClearResidualFiles();
                 }
-            } else {
-                Directory.CreateDirectory(TargetFolder);
             }
-
 
             int fileCount = zip.Entries.Count;
             int currentFile = 0;
@@ -57,7 +56,7 @@ namespace ForgeUpdater.Updater {
                     UpdaterLogger.LogDebug("Ignoring existing file: {0}", targetPath);
                 } else {
                     UpdaterLogger.LogDebug("Extracting file: {0}", targetPath);
-                    DeleteFile(targetPath);
+                    SafeDeleteFile(targetPath);
                     entry.ExtractToFile(targetPath, true);
                 }
             }
@@ -74,11 +73,11 @@ namespace ForgeUpdater.Updater {
                 }
 
                 UpdaterLogger.LogDebug("Deleting residual file: {0}", file);
-                DeleteFile(file);
+                SafeDeleteFile(file);
             }
         }
 
-        private static void DeleteFile(string file) {
+        private static void SafeDeleteFile(string file) {
             if (!File.Exists(file)) return;
 
             try {
@@ -97,13 +96,13 @@ namespace ForgeUpdater.Updater {
 
         public static void CleanupLeftoverFiles(string folder) {
             foreach (string file in Directory.GetFiles(folder, "*.updater_leftover", SearchOption.AllDirectories)) {
-                UpdaterLogger.LogDebug("Deleting residual file: {0}", file);
+                UpdaterLogger.LogDebug("Deleting leftover file: {0}", file);
                 File.Delete(file);
             }
         }
 
         private void HandleActionScript(ZipArchive zip) {
-            ZipArchiveEntry? actionScript = zip.Entries.FirstOrDefault((e) => e.Name == "forge_script.txt");
+            ZipArchiveEntry? actionScript = zip.Entries.FirstOrDefault((e) => e.Name == "update_script.txt");
             if (actionScript == null) return;
 
             using StreamReader reader = new StreamReader(actionScript.Open());
@@ -112,7 +111,10 @@ namespace ForgeUpdater.Updater {
         }
 
         private void ApplyInstallerActions(string[] actionLines) {
+            UpdaterLogger.LogInfo("Applying {0} installer actions...", actionLines.Length);
             foreach (string actionLine in actionLines) {
+                UpdaterLogger.LogDebug("Installer action: {0}", actionLine);
+
                 try {
                     string actionName = actionLine.Split(' ')[0];
 
@@ -125,6 +127,8 @@ namespace ForgeUpdater.Updater {
                     UpdaterLogger.LogError(e, "Failed to parse installer action: {0}", actionLine);
                 }
             }
+
+            UpdaterLogger.LogInfo("Finished applying installer actions.");
         }
 
         private bool IsFileIgnored(string file) {
@@ -166,7 +170,7 @@ namespace ForgeUpdater.Updater {
 
             if (File.Exists(target)) {
                 UpdaterLogger.LogDebug("Deleting existing file: {0}", target);
-                DeleteFile(target);
+                SafeDeleteFile(target);
             }
 
             UpdaterLogger.LogDebug("Moving {0} to {1}", source, target);
@@ -186,7 +190,7 @@ namespace ForgeUpdater.Updater {
 
             if (File.Exists(target)) {
                 UpdaterLogger.LogDebug("Deleting existing file: {0}", target);
-                DeleteFile(target);
+                SafeDeleteFile(target);
             }
 
             UpdaterLogger.LogDebug("Copying {0} to {1}", source, target);
@@ -205,7 +209,7 @@ namespace ForgeUpdater.Updater {
 
             if (File.Exists(target)) {
                 UpdaterLogger.LogDebug("Deleting existing file: {0}", target);
-                DeleteFile(target);
+                SafeDeleteFile(target);
             }
         }
 

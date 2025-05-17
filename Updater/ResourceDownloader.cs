@@ -70,14 +70,14 @@ namespace ForgeUpdater.Updater {
         public async Task<string> Download() {
             DownloadConfiguration configuration = new DownloadConfiguration {
                 Timeout = (int)TimeSpan.FromSeconds(30).TotalMilliseconds,
-                ReserveStorageSpaceBeforeStartingDownload = true,
+                ReserveStorageSpaceBeforeStartingDownload = true
             };
 
-            string finalDownloadUri = URI;
+            string finalDownloadUri = URI ?? throw new ArgumentNullException(nameof(URI), "Download URI is null");
             string finalZipPath = TargetZipPath;
             bool deltaPatch = false;
             if (CanDeltaPatch && IsDeltaPatchAvailable()) {
-                finalDownloadUri = DeltaPatchURI;
+                finalDownloadUri = DeltaPatchURI ?? throw new ArgumentNullException(nameof(DeltaPatchURI), "Delta patch URI is null");
                 finalZipPath = TargetDeltaPatchPath;
                 deltaPatch = true;
             }
@@ -110,6 +110,8 @@ namespace ForgeUpdater.Updater {
             download.DownloadProgressChanged += DownloadProgressChanged;
             download.DownloadFileCompleted += DownloadFileCompleted;
 
+            UpdaterLogger.LogInfo("Starting download of {0} from {1} - caching at {2}", Name, finalDownloadUri, finalZipPath);
+
             await download.StartAsync();
 
             bool result = await downloadCompleted.Task;
@@ -121,7 +123,7 @@ namespace ForgeUpdater.Updater {
                 UpdaterLogger.LogWarn("Failed to apply delta patch to {0}", Name);
 
                 Cleanup();
-                Retry();
+                await Retry();
             }
 
 
@@ -129,13 +131,13 @@ namespace ForgeUpdater.Updater {
                 UpdaterLogger.LogWarn("Checksum verification failed for {0}", Name);
 
                 Cleanup();
-                Retry();
+                await Retry();
             }
 
             return TargetZipPath;
         }
 
-        private async void Retry() {
+        private async Task Retry() {
             if (RetryCount <= 0)
                 throw new Exception("Failed to download resource.");
 
@@ -150,7 +152,7 @@ namespace ForgeUpdater.Updater {
         /// </summary>
         /// <exception cref="FileNotFoundException"></exception>
         private bool ApplyDeltaPatch() {
-            if (!File.Exists(DeltaSourceZipPath))
+            if (DeltaSourceZipPath == null || !File.Exists(DeltaSourceZipPath))
                 throw new FileNotFoundException("Source zip file not found.");
             if (!File.Exists(TargetDeltaPatchPath))
                 throw new FileNotFoundException("Delta patch file not found.");
@@ -220,7 +222,7 @@ namespace ForgeUpdater.Updater {
             } catch (Exception e) {
                 // check if e is a http error with code 404
                 if (e is AggregateException { InnerException: HttpRequestException }) {
-                    UpdaterLogger.LogWarn("Checksum for {0} not found, skipping verification", Name);
+                    UpdaterLogger.LogWarn("Checksum for {0} at {1} not found, skipping verification", Name, ChecksumURI);
                     return true;
                 }
 

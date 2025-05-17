@@ -105,6 +105,8 @@ namespace ForgeUpdater {
                             continue;
                         }
 
+                        UpdaterLogger.LogDebug("Found manifest: {0}@{1} in {2}", manifest.Id, manifest.Version, Path.GetDirectoryName(file)!);
+
                         manifest.ManifestPath = file;
                         manifests.Add(manifest);
                     } catch (JsonException e) {
@@ -119,7 +121,7 @@ namespace ForgeUpdater {
 
                 foreach (string file in Directory.GetFiles(path, "*.dll", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)) {
                     try {
-                        UpdaterLogger.LogDebug("Trying to read manifest from assembly: {0}", file);
+                        UpdaterLogger.LogDebug("Searching for manifest in assembly: {0}", file);
 
                         using Stream fileStream = File.OpenRead(file);
 
@@ -159,6 +161,8 @@ namespace ForgeUpdater {
                             UpdaterLogger.LogError(null, "Failed to parse manifest at {0}", file);
                             continue;
                         }
+
+                        UpdaterLogger.LogDebug("Found manifest {0}@{1} in assembly {2}", manifest.Id, manifest.Version, file);
 
                         manifest.Embedded = true;
                         manifests.Add(manifest);
