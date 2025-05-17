@@ -22,8 +22,7 @@ namespace ForgeUpdaterTests {
                 }
             });
 
-            ManifestStore<Manifest> updateStore = new ManifestStore<Manifest>();
-            updateStore.AddRange(new[] {
+            List<Manifest> updateStore = [
                 new Manifest() {
                     Id = "test",
                     Name = "Test",
@@ -36,9 +35,9 @@ namespace ForgeUpdaterTests {
                     Version = new ManifestVersion("1.1.0"),
                     Type = "test"
                 }
-            });
+            ];
 
-            var output = baseStore.CheckForUpdatesWith(updateStore).ToList();
+            var output = baseStore.CheckForUpdatesWith([.. updateStore]).ToList();
 
             Assert.That(output, Has.Count.EqualTo(2));
             Assert.That(output, Has.Exactly(1).Matches<(Manifest? input, Manifest update)>((i) =>

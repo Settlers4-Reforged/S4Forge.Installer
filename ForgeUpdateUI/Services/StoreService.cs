@@ -48,7 +48,7 @@ namespace ForgeUpdateUI.Services {
                 var updates = store.ManifestsToUpdate.ToArray();
 
                 if (updates.Length == 0) {
-                    loggerService.LogInfo("No updates available for Store '{0}'", store.Store.Name);
+                    loggerService.LogInfo("No updates available for Store '{0}'", store.Installation.Name);
                 }
 
                 Manifest? source = null;

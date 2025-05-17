@@ -10,8 +10,12 @@ namespace ForgeUpdater {
 
         public int Count => manifests.Count;
 
-        public IEnumerable<(TManifest? source, TManifest newer)> CheckForUpdatesWith(params ManifestStore<TManifest>[] other) {
-            List<TManifest> remoteManifests = other.SelectMany(m => m.manifests).ToList();
+        public IEnumerable<TManifest> Manifests => manifests;
+
+        public IEnumerable<(TManifest? source, TManifest newer)> CheckForUpdatesWith(params TManifest[]? remoteManifests) {
+            if (remoteManifests == null) {
+                yield break;
+            }
 
             foreach (TManifest remoteManifest in remoteManifests) {
                 TManifest? localManifest = manifests.Find(m => m.Id == remoteManifest.Id);

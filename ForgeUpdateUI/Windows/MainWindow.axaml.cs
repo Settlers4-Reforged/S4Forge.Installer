@@ -24,6 +24,8 @@ namespace ForgeUpdateUI.Windows {
         public MainWindow(StoreService storeService, LoggerService loggerService) {
             InitializeComponent();
 
+            bool autoClose = Environment.GetCommandLineArgs().Contains("--auto-close");
+
 #if DEBUG
             this.AttachDevTools();
 #endif
@@ -37,23 +39,34 @@ namespace ForgeUpdateUI.Windows {
 
             List<UpdateItem> values = new List<UpdateItem>();
             storeService.ReadStoreState().ContinueWith(async (_) => {
-                values.AddRange(storeService.Stores.SelectMany(store => store.ManifestsToUpdate).Select(pair => pair.source).Where(s => s != null).Select(manifest => new UpdateItem() {
+                values.AddRange(storeService.Stores.SelectMany(store => store.LocalManifests).Where(s => s != null).Select(manifest => new UpdateItem() {
                     Name = manifest!.Name,
                     Progress = "",
                     Version = manifest.Version.ToString()
                 }));
 
+                UpdateManifests(values);
 
                 var list = storeService.UpdateAll();
 
                 await foreach (var update in list) {
                     values.Add(update);
+                    UpdateManifests(values);
+                }
+
+                if (autoClose) {
                     Dispatcher.UIThread.Post(() => {
-                        UpdateItems.ItemsSource = values.GroupBy((i) => i.Name)
-                            .Select(g => g.Last())
-                            .OrderBy(i => i.Name);
+                        Close();
                     });
                 }
+            });
+        }
+
+        private void UpdateManifests(List<UpdateItem> values) {
+            Dispatcher.UIThread.Post(() => {
+                UpdateItems.ItemsSource = values.GroupBy((i) => i.Name)
+                    .Select(g => g.Last())
+                    .OrderBy(i => i.Name);
             });
         }
     }

@@ -9,7 +9,7 @@ namespace ForgeUpdater {
         internal const char AltDirectorySeparatorChar = '/';
         internal const char VolumeSeparatorChar = ':';
 
-        public static bool IsPathFullyQualified(string path) {
+        public static bool IsPathAbsolute(this string path) {
             if (path.Length < 2) {
                 // It isn't fixed, it must be relative.  There is no way to specify a fixed
                 // path with one character (or less).

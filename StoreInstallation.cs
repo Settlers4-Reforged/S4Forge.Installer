@@ -11,33 +11,53 @@ using System.Threading.Tasks;
 namespace ForgeUpdater {
     public class StoreInstallation<TManifest> where TManifest : Manifest {
         private ManifestStore<TManifest>? localStore;
-        private readonly List<ManifestStore<TManifest>> remoteStore = new List<ManifestStore<TManifest>>();
-        private readonly Store store;
+        private List<TManifest>? feedManifests;
+        private readonly Installation installation;
 
-        public Store Store => store;
-
-        public StoreInstallation(string installationPath, string remoteStorePath) {
-            store = new Store(installationPath, remoteStorePath);
-
-            try {
-                UpdatePipeline<TManifest>.CleanupLeftoverFiles(store.InstallationPath);
-            } catch (Exception e) {
-                UpdaterLogger.LogError(e, "Failed to clean residual files");
-            }
-        }
+        public Installation Installation => installation;
 
         public StoreInstallation(string storePath) {
             try {
-                string fileContent = System.IO.File.ReadAllText(storePath);
-                store = JsonSerializer.Deserialize<Store>(fileContent)!;
 
-                if (!PathExtensions.IsPathFullyQualified(store.InstallationPath)) {
-                    store.InstallationPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(storePath)!, store.InstallationPath));
+                // TODO: Add way to use remote installation path
+                if (!File.Exists(storePath)) {
+                    throw new FileNotFoundException("Store file not found", storePath);
                 }
 
-                for (int i = 0; i < store.RemoteStorePaths?.Length; i++) {
-                    if (!PathExtensions.IsPathFullyQualified(store.RemoteStorePaths[i] ?? "")) {
-                        store.RemoteStorePaths[i] = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(storePath)!, store.RemoteStorePaths[i]!));
+                string fileContent = File.ReadAllText(storePath);
+                installation = JsonSerializer.Deserialize<Installation>(fileContent)!;
+
+                if (!installation.InstallationPath.IsPathAbsolute()) {
+                    installation.InstallationPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(storePath)!, installation.InstallationPath));
+                }
+
+                if (Directory.Exists(installation.InstallationPath)) {
+                    installation.InstallationPath = Path.GetFullPath(installation.InstallationPath);
+                } else {
+                    UpdaterLogger.LogWarn("Installation path does not exist: {0}", installation.InstallationPath);
+                    try {
+                        Directory.CreateDirectory(installation.InstallationPath);
+                    } catch (Exception e) {
+                        UpdaterLogger.LogError(e, "Failed to create installation path: {0}", installation.InstallationPath);
+                        throw;
+                    }
+                }
+
+
+                if (installation.ManifestFeeds == null) {
+                    UpdaterLogger.LogError(null, "No manifest feeds found in store {0}", installation.Name);
+                    return;
+                }
+
+                for (int i = 0; i < installation.ManifestFeeds?.Length; i++) {
+                    Installation.ManifestFeed feed = installation.ManifestFeeds[i];
+                    if (feed.ManifestUri == null) {
+                        UpdaterLogger.LogError(null, "Manifest feed in store {0} is null at index {1}", storePath, i);
+                        continue;
+                    }
+                    Uri manifestUri = new Uri(feed.ManifestUri);
+                    if (manifestUri.IsFile && !manifestUri.IsAbsoluteUri) {
+                        feed.ManifestUri = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(storePath)!, feed.ManifestUri));
                     }
                 }
             } catch (Exception e) {
@@ -47,36 +67,65 @@ namespace ForgeUpdater {
         }
 
         public async Task ReadLocalState() {
-            localStore ??= await ManifestStore<TManifest>.CreateFromLocal(true, true, store.InstallationPath);
+            UpdaterLogger.LogInfo("Reading local manifests from {0}", installation.InstallationPath);
+            localStore ??= await ManifestStore<TManifest>.CreateFromLocal(true, true, installation.InstallationPath);
+
+            UpdaterLogger.LogDebug("Read {0} local manifests from {1}", localStore.Count, installation.InstallationPath);
         }
 
-        public async Task IngestRemoteStores(bool addDefaultRemote = false, params ManifestStore<TManifest>[] others) {
-            if (addDefaultRemote && store.RemoteStorePaths != null)
-                foreach (string remoteStorePath in store.RemoteStorePaths)
-                    remoteStore.Add(await ManifestStore<TManifest>.Create(remoteStorePath));
+        public async Task IngestRemoteFeeds() {
+            feedManifests ??= new List<TManifest>();
 
-            remoteStore.AddRange(others);
+            UpdaterLogger.LogInfo("Ingesting {0} remote feeds", installation.ManifestFeeds?.Length ?? 0);
+
+            foreach (Uri manifestUri in installation.ManifestFeeds!.Select(feed => new Uri(feed.ManifestUri))) {
+                TManifest? manifest;
+                try {
+                    UpdaterLogger.LogDebug("Reading manifest from {0}", manifestUri);
+
+                    if (manifestUri.IsFile) {
+                        using FileStream manifestStream = File.OpenRead(manifestUri.LocalPath);
+                        manifest = await JsonSerializer.DeserializeAsync<TManifest>(manifestStream);
+                    } else {
+                        using HttpClient client = new HttpClient();
+                        using Stream manifestStream = await client.GetStreamAsync(manifestUri);
+                        manifest = await JsonSerializer.DeserializeAsync<TManifest>(manifestStream);
+                    }
+
+                    if (manifest == null) {
+                        throw new InvalidOperationException("Manifest is null");
+                    }
+
+                    UpdaterLogger.LogInfo("Read manifest {0}@{1} from {2}", manifest.Id, manifest.Version, manifestUri);
+                } catch (Exception e) {
+                    UpdaterLogger.LogError(e, "Failed to read manifest from {0}", manifestUri);
+                    continue;
+                }
+
+                feedManifests.Add(manifest);
+            }
         }
 
         public async Task ReadStoreState() {
-            await Task.WhenAll(ReadLocalState(), IngestRemoteStores(store.RemoteStorePaths != null));
+            await Task.WhenAll(ReadLocalState(), IngestRemoteFeeds());
         }
 
         public int LocalManifestCount => localStore?.Count ?? throw new InvalidOperationException("Store not initialized. Please run ReadStoreState first.");
-        public int RemoteManifestCount => remoteStore?.Count ?? throw new InvalidOperationException("Store not initialized. Please run ReadStoreState first.");
+        public int RemoteManifestCount => feedManifests?.Count ?? throw new InvalidOperationException("Store not initialized. Please run ReadStoreState first.");
 
-        public IEnumerable<(TManifest? source, TManifest newer)> ManifestsToUpdate => localStore?.CheckForUpdatesWith(remoteStore.ToArray()) ?? throw new InvalidOperationException("Store not initialized. Please run ReadStoreState first.");
-        public bool UpdateAvailable => localStore != null && remoteStore.Count != 0 && localStore.CheckForUpdatesWith(remoteStore.ToArray()).Any();
+        public IEnumerable<TManifest> LocalManifests => localStore?.Manifests ?? throw new InvalidOperationException("Store not initialized. Please run ReadStoreState first.");
+        public IEnumerable<(TManifest? source, TManifest newer)> ManifestsToUpdate => localStore?.CheckForUpdatesWith(feedManifests?.ToArray()) ?? throw new InvalidOperationException("Store not initialized. Please run ReadStoreState first.");
+        public bool UpdateAvailable => localStore != null && feedManifests?.Count != 0 && localStore.CheckForUpdatesWith(feedManifests?.ToArray()).Any();
 
         public async IAsyncEnumerable<(TManifest target, string)> UpdateAll() {
-            if (localStore == null || remoteStore.Count == 0) {
+            if (localStore == null || feedManifests == null) {
                 throw new InvalidOperationException("Store not initialized. Please run ReadStoreState first.");
             }
 
-            foreach ((TManifest? source, TManifest target) in localStore.CheckForUpdatesWith(remoteStore.ToArray())) {
-                string installationPath = store.InstallationPath;
+            foreach ((TManifest? source, TManifest target) in localStore.CheckForUpdatesWith([.. feedManifests])) {
+                string installationPath = installation.InstallationPath;
 
-                if (store.InstallIntoFolders) {
+                if (installation.InstallIntoFolders) {
                     installationPath = Path.Combine(installationPath, target.Id);
                 }
 
