@@ -21,10 +21,12 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+        <PackageReference Include="Watson.Lite" Version="6.3.9" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\ForgeUpdater.csproj" />
+        <ProjectReference Include="..\ForgeUpdateUI\ForgeUpdateUI.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -34,6 +36,9 @@
     <ItemGroup>
         <None Update="Fixture\Zips\S4Forge.1.0.0.zip">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Fixture\Zips\UX-Engine.0.10.1.zip">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 

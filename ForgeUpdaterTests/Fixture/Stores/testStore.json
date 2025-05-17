@@ -2,6 +2,13 @@
   "name": "Plugins",
   "keep_residual_files": true,
   "install_into_folders": true,
-  "remote_store_paths": [ "./remoteStore.json" ],
+  "manifest_feeds": [
+    {
+      "manifest_uri": "S4Forge.json"
+    },
+    {
+      "manifest_uri": "S4Forge.UX-Engine.json"
+    }
+  ],
   "installation_path": "../Files/"
 }

@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "S4Forge",
   "id": "S4Forge",
   "assets": {
@@ -7,6 +7,5 @@
   "clearResidualFiles": true,
   "version": "1.0.0",
   "type": "test",
-  "relationships": [],
-  "embedded": false
+  "relationships": []
 }
