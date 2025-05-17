@@ -12,7 +12,7 @@
     </Target>
 
     <!-- Generate the manifest.json based on project definitions -->
-    <Target Name="GenerateManifest" Condition="'$(ManifestId)' != ''" BeforeTargets="PostBuildEvent" Outputs="$(ManifestOutputPath)">
+    <Target Name="GenerateManifest" Condition="'$(ManifestId)' != ''" BeforeTargets="PreBuildEvent" Outputs="$(ManifestOutputPath)">
         <PropertyGroup>
             <ManifestType Condition="'$(ManifestType)' == ''">$(ProjectType)</ManifestType>
 
