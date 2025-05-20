@@ -5,6 +5,8 @@
 
         <ManifestCopyFiles Condition="'$(ManifestCopyFiles)' == '' AND '$(ManifestId)' != ''">true</ManifestCopyFiles>
         <ManifestEntryPoint Condition="'$(ManifestEntryPoint)' == '' and '$(ProjectType)' == 'Module'">$(TargetFileName)</ManifestEntryPoint>
+
+        <IsDotnet Condition="'$(MSBuildProjectExtension)' == '.csproj'">true</IsDotnet>
     </PropertyGroup>
 
     <Target Name="ManifestCheckup">
@@ -47,8 +49,8 @@
 
     <!-- Add output to either embedded or general output -->
     <ItemGroup Condition="'$(ManifestCopyFiles)' == 'true'">
-        <EmbeddedResource Condition="'$(ManifestEmbedded)' == 'true'" Remove="$(ManifestOutputPath)"/>
-        <EmbeddedResource Condition="'$(ManifestEmbedded)' == 'true'" Include="$(ManifestOutputPath)">
+        <EmbeddedResource Condition="'$(IsDotnet)' == 'true' AND '$(ManifestEmbedded)' == 'true'" Remove="$(ManifestOutputPath)"/>
+        <EmbeddedResource Condition="'$(IsDotnet)' == 'true' AND '$(ManifestEmbedded)' == 'true'" Include="$(ManifestOutputPath)">
             <LogicalName>manifest.json</LogicalName>
             <!-- Would get the assembly name as a prefix otherwise -->
         </EmbeddedResource>
@@ -57,4 +59,10 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>
+
+    <ItemDefinitionGroup Condition="'$(ManifestCopyFiles)' == 'true' AND '$(IsDotnet)' != 'true'">
+        <Link>
+            <EmbedManagedResourceFile>$(ManifestOutputPath);%(EmbedManagedResourceFile)</EmbedManagedResourceFile>
+        </Link>
+    </ItemDefinitionGroup>
 </Project>
