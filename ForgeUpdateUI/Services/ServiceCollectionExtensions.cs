@@ -8,6 +8,11 @@ namespace ForgeUpdateUI.Services {
             collection.AddSingleton<StoreService>();
             collection.AddSingleton<LoggerService>();
 
+            if (!Program.Headless)
+                AddWindows(collection);
+        }
+
+        private static void AddWindows(IServiceCollection collection) {
             collection.AddTransient<MainWindow>();
         }
     }

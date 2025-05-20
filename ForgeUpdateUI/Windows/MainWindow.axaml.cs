@@ -37,23 +37,7 @@ namespace ForgeUpdateUI.Windows {
                 });
             });
 
-            List<UpdateItem> values = new List<UpdateItem>();
-            storeService.ReadStoreState().ContinueWith(async (_) => {
-                values.AddRange(storeService.Stores.SelectMany(store => store.LocalManifests).Where(s => s != null).Select(manifest => new UpdateItem() {
-                    Name = manifest!.Name,
-                    Progress = "",
-                    Version = manifest.Version.ToString()
-                }));
-
-                UpdateManifests(values);
-
-                var list = storeService.UpdateAll();
-
-                await foreach (var update in list) {
-                    values.Add(update);
-                    UpdateManifests(values);
-                }
-
+            storeService.Update(UpdateManifests).ContinueWith((_) => {
                 if (autoClose) {
                     Dispatcher.UIThread.Post(() => {
                         Close();

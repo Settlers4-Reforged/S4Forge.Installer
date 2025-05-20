@@ -18,7 +18,6 @@ namespace ForgeUpdateUI.Services {
         public LoggerService() {
             UpdaterLogger.Logger = this;
 
-
             string applicationPath = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('/', '\\');
             logs.Subscribe((value) => {
                 File.WriteAllText($"{applicationPath}/{logFile}", value);

@@ -41,7 +41,25 @@ namespace ForgeUpdateUI.Services {
             await Task.WhenAll(Stores.Select(store => store.ReadStoreState()));
         }
 
+        public async Task Update(Action<List<UpdateItem>>? onUpdate = null) {
+            List<UpdateItem> values = new List<UpdateItem>();
 
+            await ReadStoreState();
+            values.AddRange(this.Stores.SelectMany(store => store.LocalManifests).Where(s => s != null).Select(manifest => new UpdateItem() {
+                Name = manifest!.Name,
+                Progress = "",
+                Version = manifest.Version.ToString()
+            }));
+
+            onUpdate?.Invoke(values);
+
+            var list = this.UpdateAll();
+
+            await foreach (var update in list) {
+                values.Add(update);
+                onUpdate?.Invoke(values);
+            }
+        }
 
         public async IAsyncEnumerable<UpdateItem> UpdateAll() {
             foreach (var store in Stores) {

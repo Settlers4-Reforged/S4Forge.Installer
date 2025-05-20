@@ -16,6 +16,10 @@ namespace ForgeUpdater {
                 return false;
             }
 
+            if (path.StartsWith("http")) {
+                return true;
+            }
+
             if (IsDirectorySeparator(path[0])) {
                 // There is no valid way to specify a relative path with two initial slashes or
                 // \? as ? isn't valid for drive relative paths and \??\ is equivalent to \\?\

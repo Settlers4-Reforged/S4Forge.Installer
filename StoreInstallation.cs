@@ -55,8 +55,8 @@ namespace ForgeUpdater {
                         UpdaterLogger.LogError(null, "Manifest feed in store {0} is null at index {1}", storePath, i);
                         continue;
                     }
-                    Uri manifestUri = new Uri(feed.ManifestUri);
-                    if (manifestUri.IsFile && !manifestUri.IsAbsoluteUri) {
+
+                    if (!feed.ManifestUri.IsPathAbsolute()) {
                         feed.ManifestUri = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(storePath)!, feed.ManifestUri));
                     }
                 }
