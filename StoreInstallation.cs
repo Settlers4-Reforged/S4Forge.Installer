@@ -117,12 +117,23 @@ namespace ForgeUpdater {
         public IEnumerable<(TManifest? source, TManifest newer)> ManifestsToUpdate => localStore?.CheckForUpdatesWith(feedManifests?.ToArray()) ?? throw new InvalidOperationException("Store not initialized. Please run ReadStoreState first.");
         public bool UpdateAvailable => localStore != null && feedManifests?.Count != 0 && localStore.CheckForUpdatesWith(feedManifests?.ToArray()).Any();
 
-        public async IAsyncEnumerable<(TManifest target, string)> UpdateAll() {
+        public async IAsyncEnumerable<(TManifest target, string)> UpdateAll(bool force = false) {
             if (localStore == null || feedManifests == null) {
                 throw new InvalidOperationException("Store not initialized. Please run ReadStoreState first.");
             }
 
-            foreach ((TManifest? source, TManifest target) in localStore.CheckForUpdatesWith([.. feedManifests])) {
+            UpdaterLogger.LogInfo("###### Updating store {0} ######", installation.Name);
+
+            IEnumerable<(TManifest? source, TManifest target)> updates;
+            if (force) {
+                updates = feedManifests.Select<TManifest, (TManifest?, TManifest)>(static manifest => (null, manifest));
+            } else {
+                updates = localStore.CheckForUpdatesWith([.. feedManifests]);
+            }
+
+            UpdaterLogger.LogInfo("Found {0} updates", updates.Count());
+
+            foreach ((TManifest? source, TManifest target) in updates) {
                 string installationPath = installation.InstallationPath;
 
                 if (installation.InstallIntoFolders) {
