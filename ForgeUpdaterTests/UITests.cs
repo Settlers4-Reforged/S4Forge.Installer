@@ -77,7 +77,7 @@ namespace ForgeUpdaterTests {
 
             Process? updater = Process.Start(new ProcessStartInfo() {
                 FileName = "ForgeUpdateUI.exe",
-                Arguments = "--auto-close --store=" + Path.Combine(baseTestPath, "Installation.json"),
+                Arguments = "--headless --auto-close --store=" + Path.Combine(baseTestPath, "Installation.json"),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
