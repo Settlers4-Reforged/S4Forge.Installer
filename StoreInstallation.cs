@@ -28,7 +28,7 @@ namespace ForgeUpdater {
                 installation = JsonSerializer.Deserialize<Installation>(fileContent)!;
 
                 if (!installation.InstallationPath.IsPathAbsolute()) {
-                    installation.InstallationPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(storePath)!, installation.InstallationPath));
+                    installation.InstallationPath = Path.GetFullPath(Path.Combine(UpdaterConfig.WorkingDirectory, installation.InstallationPath));
                 }
 
                 if (Directory.Exists(installation.InstallationPath)) {

@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace ForgeUpdater {
     public static class UpdaterConfig {
-        public static string BaseDownloadPath { get; set; } = $"{Environment.CurrentDirectory}/.downloads";
+        public static string WorkingDirectory { get; set; } = Environment.CurrentDirectory;
+        public static string BaseDownloadPath { get; set; } = $"{WorkingDirectory}/.downloads";
 
         /// <summary>
         /// Whether or not the default setting for a manifest should be that the updater should clear residual files after an update or not.
