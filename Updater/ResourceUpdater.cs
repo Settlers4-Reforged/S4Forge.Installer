@@ -1,6 +1,11 @@
 ﻿using ForgeUpdater.Manifests;
 
-using System.IO.Compression;
+using ICSharpCode.SharpZipLib.Core;
+using ICSharpCode.SharpZipLib.Zip;
+
+using System;
+using System.Linq;
+using System.Xml.Schema;
 
 
 namespace ForgeUpdater.Updater {
@@ -25,8 +30,17 @@ namespace ForgeUpdater.Updater {
         string UpdateZip { get; set; }
         private string TargetFolder { get; set; }
 
+        private static string LockFilePath(TManifest manifest) => Path.Combine(UpdaterConfig.BaseDownloadPath, $"{manifest.Id}.lock");
+        private string LockFile => LockFilePath(TargetManifest);
+
         public IEnumerable<float> Update() {
-            using ZipArchive zip = ZipFile.OpenRead(UpdateZip);
+            if (File.Exists(LockFile)) {
+                UpdaterLogger.LogWarn("Installation is broken for {0}, retrying to apply update", TargetManifest.Id);
+            }
+
+            File.Open(LockFile, FileMode.Create).Dispose();
+
+            using ZipFile zip = new ZipFile(UpdateZip);
 
             Directory.CreateDirectory(TargetFolder);
 
@@ -38,27 +52,57 @@ namespace ForgeUpdater.Updater {
                 }
             }
 
-            int fileCount = zip.Entries.Count;
-            int currentFile = 0;
-            foreach (ZipArchiveEntry entry in zip.Entries) {
+            long fileCount = zip.Count;
+            long currentFile = 0;
+
+            long errors = 0;
+
+            yield return 0;
+
+            Parallel.ForEach(zip.OfType<ZipEntry>(), (ZipEntry entry) => {
                 // Report progress...
-                yield return (float)currentFile++ / fileCount;
+                Interlocked.Increment(ref currentFile);
 
-                string targetPath = Path.Combine(TargetFolder, entry.FullName);
+                string targetPath = Path.Combine(TargetFolder, entry.Name);
+                string targetDir = Path.GetDirectoryName(targetPath) ?? string.Empty;
 
-                if (entry.FullName.EndsWith("/")) {
+                if (entry.Name.EndsWith("/")) {
                     UpdaterLogger.LogDebug("Creating directory: {0}", targetPath);
                     Directory.CreateDirectory(targetPath);
-                    continue;
+                    return;
                 }
 
-                if (File.Exists(targetPath) && IsFileIgnored(entry.FullName)) {
+                if (!Directory.Exists(targetDir)) {
+                    UpdaterLogger.LogDebug("Creating missing directory: {0}", targetPath);
+                    Directory.CreateDirectory(targetDir);
+                }
+
+                if (File.Exists(targetPath) && IsFileIgnored(entry.Name)) {
                     UpdaterLogger.LogDebug("Ignoring existing file: {0}", targetPath);
                 } else {
                     UpdaterLogger.LogDebug("Extracting file: {0}", targetPath);
-                    SafeDeleteFile(targetPath);
-                    entry.ExtractToFile(targetPath, true);
+
+                    try {
+                        SafeDeleteFile(targetPath);
+
+                        byte[] buffer = new byte[4096];
+                        Stream zipStream = zip.GetInputStream(entry);
+                        using FileStream streamWriter = File.Create(targetPath);
+                        StreamUtils.Copy(zipStream, streamWriter, new byte[4096]);
+                    } catch (Exception e) {
+                        UpdaterLogger.LogError(e, "Failed to extract file: {0}", targetPath);
+                        Interlocked.Increment(ref errors);
+                        return;
+                    }
                 }
+            });
+
+            if (errors > 0) {
+                UpdaterLogger.LogError(null, "Failed to extract {0} files. Please fix the errors and try again", errors);
+            } else {
+                UpdaterLogger.LogInfo("Extracted {0} files.", fileCount);
+
+                File.Delete(LockFile);
             }
 
             yield return 1;
@@ -90,8 +134,14 @@ namespace ForgeUpdater.Updater {
                     File.Move(file, file + ".updater_leftover");
                 } catch (Exception e2) {
                     UpdaterLogger.LogError(e2, "Failed to delete and rename file: {0}", file);
+                    throw;
                 }
             }
+        }
+
+        public static bool IsInstallBroken(TManifest manifest) {
+            if (manifest == null) throw new ArgumentNullException(nameof(manifest));
+            return File.Exists(LockFilePath(manifest));
         }
 
         public static void CleanupLeftoverFiles(string folder) {
@@ -101,12 +151,17 @@ namespace ForgeUpdater.Updater {
             }
         }
 
-        private void HandleActionScript(ZipArchive zip) {
-            ZipArchiveEntry? actionScript = zip.Entries.FirstOrDefault((e) => e.Name == "update_script.txt");
+        private void HandleActionScript(ZipFile zip) {
+            UpdaterLogger.LogInfo("Checking for installer action script...");
+
+            ZipEntry? actionScript = zip.OfType<ZipEntry>().FirstOrDefault((e) => e.Name == "update_script.txt");
             if (actionScript == null) return;
 
-            using StreamReader reader = new StreamReader(actionScript.Open());
+            UpdaterLogger.LogInfo("Found installer action script: {0}", actionScript.Name);
+            using StreamReader reader = new StreamReader(zip.GetInputStream(actionScript));
             string[] actionLines = reader.ReadToEnd().Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            UpdaterLogger.LogDebug("Read {0} installer actions.", actionLines.Length);
             ApplyInstallerActions(actionLines);
         }
 

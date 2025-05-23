@@ -32,7 +32,7 @@ namespace ForgeUpdateUI.Windows {
 
             loggerService.Logs.Subscribe((log) => {
                 Dispatcher.UIThread.Post(() => {
-                    LogText.Text = log;
+                    LogText.Text += log;
                     LogScroll.ScrollToEnd();
                 });
             });
