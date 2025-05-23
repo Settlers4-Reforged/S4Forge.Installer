@@ -25,6 +25,9 @@ namespace ForgeUpdateUI.Services {
             }
 
             List<string> stores = (from arg in args where arg.StartsWith("--store=") select arg.Substring(8).Trim('\'')).ToList();
+
+            stores.AddRange(from arg in args where arg.StartsWith("--storeDir=") from file in Directory.GetFiles(arg.Substring(11)) where file.EndsWith(".json") select file);
+
             if (stores.Count == 0) {
                 Console.WriteLine("Usage: ForgeUpdateUI --store='<store_path>'");
                 return;
