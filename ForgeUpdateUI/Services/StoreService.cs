@@ -5,6 +5,7 @@ using ForgeUpdateUI.Models;
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,7 +42,10 @@ namespace ForgeUpdateUI.Services {
         }
 
         public async Task ReadStoreState() {
-            await Task.WhenAll(Stores.Select(store => store.ReadStoreState()));
+            await Task.WhenAll(Stores.Select(store => {
+                loggerService.LogInfo("#### Reading Store state for '{0}' ####", store.Installation.Name);
+                return store.ReadStoreState();
+            }));
         }
 
         public async Task Update(Action<List<UpdateItem>>? onUpdate = null) {

@@ -39,15 +39,18 @@ namespace ForgeUpdateUI {
                     Environment.Exit(0);
                 } else if (Headless) {
                     AttachConsole(-1);
-
-                    StoreService storeService = Services.GetService<StoreService>()!;
                     LoggerService loggerService = Services.GetService<LoggerService>()!;
 
                     loggerService.Logs.Subscribe((log) => {
                         Console.WriteLine(log.ToString().Trim());
                     });
 
+                    loggerService.LogInfo("### Forge Updater started ###");
+
+                    StoreService storeService = Services.GetService<StoreService>()!;
                     await storeService.Update();
+
+                    loggerService.LogInfo("### Update complete ###");
                 } else {
                     StartApp(args);
                 }
