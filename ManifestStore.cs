@@ -160,7 +160,15 @@ namespace ForgeUpdater {
                         using Stream fileStream = File.OpenRead(file);
 
                         using PEReader per = new PEReader(fileStream);
-                        MetadataReader mr = per.GetMetadataReader();
+                        MetadataReader mr;
+                        try {
+                            mr = per.GetMetadataReader();
+
+                        } catch (Exception) {
+                            UpdaterLogger.LogDebug("Not a dll with metadata in {0}", file);
+                            continue;
+                        }
+
                         CorHeader? peHeadersCorHeader = per.PEHeaders.CorHeader;
                         if (peHeadersCorHeader == null) {
                             // Not a .NET assembly with manifest metadata
