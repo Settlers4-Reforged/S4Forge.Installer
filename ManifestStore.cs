@@ -1,4 +1,5 @@
 ﻿using ForgeUpdater.Manifests;
+using ForgeUpdater.Updater;
 
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -27,6 +28,11 @@ namespace ForgeUpdater {
                 }
 
                 if (remoteManifest.Version != localManifest.Version) {
+                    yield return (localManifest, remoteManifest);
+                }
+
+                if (ResourceUpdater<TManifest>.IsInstallBroken(localManifest)) {
+                    // If the local manifest is broken, we need to try again updating it to the remote version:
                     yield return (localManifest, remoteManifest);
                 }
             }
