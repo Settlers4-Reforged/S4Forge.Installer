@@ -97,9 +97,30 @@ namespace ForgeUpdater {
             return await store.FromLocal(recursive, readEmbeddedManifests, paths);
         }
 
+        static int GetRecursionDepth(string basePath, string targetPath) {
+            // Normalize and get absolute paths
+            basePath = Path.GetFullPath(basePath.TrimEnd(Path.DirectorySeparatorChar));
+            targetPath = Path.GetFullPath(targetPath.TrimEnd(Path.DirectorySeparatorChar));
+
+            if (!targetPath.StartsWith(basePath, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("Target path is not a subpath of the base path.");
+
+            // Count directories
+            int baseDepth = basePath.Split(Path.DirectorySeparatorChar).Length;
+            int targetDepth = targetPath.Split(Path.DirectorySeparatorChar).Length;
+
+            return targetDepth - baseDepth;
+        }
+
         public async Task<ManifestStore<TManifest>> FromLocal(bool recursive, bool readEmbeddedManifests, params string[] paths) {
             foreach (string path in paths) {
                 foreach (string file in Directory.GetFiles(path, "manifest.json", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)) {
+                    int depth = GetRecursionDepth(path, file);
+                    if (depth > 2) {
+                        UpdaterLogger.LogDebug("Skipping manifest in subdirectory: {0}, depth {1} > 2", file, depth);
+                        continue;
+                    }
+
                     try {
                         using Stream fileStream = File.OpenRead(file);
                         TManifest? manifest = await JsonSerializer.DeserializeAsync<TManifest>(fileStream);
@@ -127,6 +148,12 @@ namespace ForgeUpdater {
                 var asiFiles = Directory.GetFiles(path, "*.asi", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
 
                 foreach (string file in dllFiles.Concat(asiFiles)) {
+                    int depth = GetRecursionDepth(path, file);
+                    if (depth > 2) {
+                        UpdaterLogger.LogDebug("Skipping assembly in subdirectory: {0}, depth {1} > 2", file, depth);
+                        continue;
+                    }
+
                     try {
                         UpdaterLogger.LogDebug("Searching for manifest in assembly: {0}", file);
 
