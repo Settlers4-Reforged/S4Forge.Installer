@@ -17,6 +17,7 @@
     <RemoveDir Condition="Exists('$(ReleasePath)')" Directories="$(ReleasePath)" />
 
     <Copy SourceFiles="@(ExportFile)" DestinationFolder="$(ReleaseOutputPath)%(ExportFile.ExportFileDir)\%(RecursiveDir)" SkipUnchangedFiles="True" />
+    <Copy Condition="'$(ManifestEmbedded)' == 'false'" SourceFiles="$(ManifestOutputPath)" DestinationFolder="$(ReleaseOutputPath)" />
     
     <ZipDirectory SourceDirectory="$(ReleaseOutputPath)" DestinationFile="$(ReleasePath)$(ReleaseFile)"/>
 
