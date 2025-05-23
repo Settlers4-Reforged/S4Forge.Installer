@@ -43,11 +43,8 @@ namespace ForgeUpdateUI {
                     StoreService storeService = Services.GetService<StoreService>()!;
                     LoggerService loggerService = Services.GetService<LoggerService>()!;
 
-                    int previousLogPosition = 0;
                     loggerService.Logs.Subscribe((log) => {
-                        var newLog = log.AsSpan(previousLogPosition);
-                        previousLogPosition += newLog.Length;
-                        Console.WriteLine(newLog.ToString().Trim());
+                        Console.WriteLine(log.ToString().Trim());
                     });
 
                     await storeService.Update();
