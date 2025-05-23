@@ -123,7 +123,10 @@ namespace ForgeUpdater {
                 if (!readEmbeddedManifests)
                     continue;
 
-                foreach (string file in Directory.GetFiles(path, "*.dll", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)) {
+                var dllFiles = Directory.GetFiles(path, "*.dll", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+                var asiFiles = Directory.GetFiles(path, "*.asi", recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+
+                foreach (string file in dllFiles.Concat(asiFiles)) {
                     try {
                         UpdaterLogger.LogDebug("Searching for manifest in assembly: {0}", file);
 
