@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 
@@ -13,9 +14,15 @@ namespace ForgeUpdateUI {
         }
 
         public override void OnFrameworkInitializationCompleted() {
-            MainWindow mainWindow = Program.Services.GetRequiredService<MainWindow>();
+            Window targetWindow;
+            if (Program.IsInstaller) {
+                targetWindow = Program.Services.GetRequiredService<InstallerWindow>();
+            } else {
+                targetWindow = Program.Services.GetRequiredService<MainWindow>();
+            }
+
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) {
-                desktop.MainWindow = mainWindow;
+                desktop.MainWindow = targetWindow;
             }
 
             base.OnFrameworkInitializationCompleted();

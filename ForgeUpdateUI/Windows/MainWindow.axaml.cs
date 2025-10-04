@@ -24,7 +24,7 @@ namespace ForgeUpdateUI.Windows {
         public MainWindow(StoreService storeService, LoggerService loggerService) {
             InitializeComponent();
 
-            bool autoClose = Environment.GetCommandLineArgs().Contains("--auto-close");
+            bool autoClose = Program.CommandLineArgs.Contains("--auto-close");
 
 #if DEBUG
             this.AttachDevTools();

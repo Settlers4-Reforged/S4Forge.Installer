@@ -47,10 +47,4 @@
         <Folder Include="Fixture\Stores\Simple\" />
     </ItemGroup>
 
-    <ProjectExtensions>
-        <VisualStudio>
-            <UserProperties />
-        </VisualStudio>
-    </ProjectExtensions>
-
 </Project>

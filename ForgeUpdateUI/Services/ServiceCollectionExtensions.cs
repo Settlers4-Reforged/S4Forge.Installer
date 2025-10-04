@@ -6,6 +6,7 @@ namespace ForgeUpdateUI.Services {
     public static class ServiceCollectionExtensions {
         public static void AddCommonServices(this IServiceCollection collection) {
             collection.AddSingleton<StoreService>();
+            collection.AddSingleton<InstallationService>();
             collection.AddSingleton<LoggerService>();
 
             if (!Program.Headless)
@@ -14,6 +15,7 @@ namespace ForgeUpdateUI.Services {
 
         private static void AddWindows(IServiceCollection collection) {
             collection.AddTransient<MainWindow>();
+            collection.AddTransient<InstallerWindow>();
         }
     }
 

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ForgeUpdateUI.Services {
@@ -19,13 +20,12 @@ namespace ForgeUpdateUI.Services {
         public StoreService(LoggerService loggerService) {
             this.loggerService = loggerService;
 
-            string[] args = Environment.GetCommandLineArgs();
-            if (args.Length < 2) {
+            string[] args = Program.CommandLineArgs;
+            List<string> stores = (from arg in args where arg.StartsWith("--store=") select arg.Substring(8).Trim('\'')).ToList();
+            if (stores.Count == 0) {
                 Console.WriteLine("Usage: ForgeUpdateUI --store='<store_path>'");
                 return;
             }
-
-            List<string> stores = (from arg in args where arg.StartsWith("--store=") select arg.Substring(8).Trim('\'')).ToList();
 
             stores.AddRange(from arg in args where arg.StartsWith("--storeDir=") from file in Directory.GetFiles(arg.Substring(11)) where file.EndsWith(".json") select file);
 
@@ -35,9 +35,30 @@ namespace ForgeUpdateUI.Services {
             }
 
             foreach (string storePath in stores) {
-                loggerService.LogInfo($"Loading store from {storePath}");
-                StoreInstallation<Manifest> installation = new StoreInstallation<Manifest>(storePath);
-                Stores.Add(installation);
+                loggerService.LogInfo($"Loading store installations from {storePath}");
+                // TODO: Add way to use remote installation path
+                if (!File.Exists(storePath)) {
+                    throw new FileNotFoundException("Store file not found", storePath);
+                }
+
+                string fileContent = File.ReadAllText(storePath);
+                Installation[] installations;
+                try {
+                    installations = JsonSerializer.Deserialize<Installation[]>(fileContent)!;
+                } catch (JsonException e) {
+                    // File is probably just a single installation
+                    installations = [JsonSerializer.Deserialize<Installation>(fileContent)!];
+                }
+
+                foreach (var installation in installations) {
+                    if (installation == null) {
+                        loggerService.LogError(null, "Failed to parse installation from store file {0}", storePath);
+                        continue;
+                    }
+
+                    StoreInstallation<Manifest> storeInstallation = new StoreInstallation<Manifest>(installation, storePath);
+                    Stores.Add(storeInstallation);
+                }
             }
         }
 

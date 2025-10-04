@@ -16,54 +16,57 @@ namespace ForgeUpdater {
 
         public Installation Installation => installation;
 
-        public StoreInstallation(string storePath) {
+        public StoreInstallation(Installation installation, string installationPath) {
+            if (string.IsNullOrEmpty(installation.Name) || string.IsNullOrEmpty(installation.InstallationPath) || installation.ManifestFeeds == null || installation.ManifestFeeds.Length == 0) {
+                UpdaterLogger.LogError(null, "Invalid installation in store file {0}: {1}", installationPath, JsonSerializer.Serialize(installation));
+                throw new InvalidOperationException("Invalid installation in store file");
+            }
+
             try {
-
-                // TODO: Add way to use remote installation path
-                if (!File.Exists(storePath)) {
-                    throw new FileNotFoundException("Store file not found", storePath);
-                }
-
-                string fileContent = File.ReadAllText(storePath);
-                installation = JsonSerializer.Deserialize<Installation>(fileContent)!;
-
-                if (!installation.InstallationPath.IsPathAbsolute()) {
-                    installation.InstallationPath = Path.GetFullPath(Path.Combine(UpdaterConfig.WorkingDirectory, installation.InstallationPath));
-                }
-
-                if (Directory.Exists(installation.InstallationPath)) {
-                    installation.InstallationPath = Path.GetFullPath(installation.InstallationPath);
-                } else {
-                    UpdaterLogger.LogWarn("Installation path does not exist: {0}", installation.InstallationPath);
-                    try {
-                        Directory.CreateDirectory(installation.InstallationPath);
-                    } catch (Exception e) {
-                        UpdaterLogger.LogError(e, "Failed to create installation path: {0}", installation.InstallationPath);
-                        throw;
-                    }
-                }
-
-
-                if (installation.ManifestFeeds == null) {
-                    UpdaterLogger.LogError(null, "No manifest feeds found in store {0}", installation.Name);
-                    return;
-                }
-
-                for (int i = 0; i < installation.ManifestFeeds?.Length; i++) {
-                    Installation.ManifestFeed feed = installation.ManifestFeeds[i];
-                    if (feed.ManifestUri == null) {
-                        UpdaterLogger.LogError(null, "Manifest feed in store {0} is null at index {1}", storePath, i);
-                        continue;
-                    }
-
-                    if (!feed.ManifestUri.IsPathAbsolute()) {
-                        feed.ManifestUri = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(storePath)!, feed.ManifestUri));
-                    }
-                }
+                this.installation = installation;
+                IngestInstallation(installationPath);
             } catch (Exception e) {
                 UpdaterLogger.LogError(e, "Failed to read store configuration");
                 throw;
             }
+        }
+
+        private bool IngestInstallation(string storePath) {
+            if (!installation.InstallationPath.IsPathAbsolute()) {
+                installation.InstallationPath = Path.GetFullPath(Path.Combine(UpdaterConfig.WorkingDirectory, installation.InstallationPath));
+            }
+
+            if (Directory.Exists(installation.InstallationPath)) {
+                installation.InstallationPath = Path.GetFullPath(installation.InstallationPath);
+            } else {
+                UpdaterLogger.LogWarn("Installation path does not exist: {0}", installation.InstallationPath);
+                try {
+                    Directory.CreateDirectory(installation.InstallationPath);
+                } catch (Exception e) {
+                    UpdaterLogger.LogError(e, "Failed to create installation path: {0}", installation.InstallationPath);
+                    throw;
+                }
+            }
+
+
+            if (installation.ManifestFeeds == null) {
+                UpdaterLogger.LogError(null, "No manifest feeds found in store {0}", installation.Name);
+                return false;
+            }
+
+            for (int i = 0; i < installation.ManifestFeeds?.Length; i++) {
+                Installation.ManifestFeed feed = installation.ManifestFeeds[i];
+                if (feed.ManifestUri == null) {
+                    UpdaterLogger.LogError(null, "Manifest feed in store {0} is null at index {1}", storePath, i);
+                    continue;
+                }
+
+                if (!feed.ManifestUri.IsPathAbsolute()) {
+                    feed.ManifestUri = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(storePath)!, feed.ManifestUri));
+                }
+            }
+
+            return true;
         }
 
         public async Task ReadLocalState() {
@@ -71,6 +74,9 @@ namespace ForgeUpdater {
             localStore ??= await ManifestStore<TManifest>.CreateFromLocal(true, true, installation.InstallationPath);
 
             UpdaterLogger.LogDebug("Read {0} local manifests from {1}", localStore.Count, installation.InstallationPath);
+            if (localStore.Count == 0) {
+                UpdaterLogger.LogWarn("No local manifests found - this usually indicates a new installation...");
+            }
         }
 
         public async Task IngestRemoteFeeds() {

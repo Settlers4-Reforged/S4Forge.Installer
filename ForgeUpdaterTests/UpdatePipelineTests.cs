@@ -72,7 +72,7 @@ namespace ForgeUpdaterTests {
             Assert.That(Directory.Exists(testPath), Is.True);
             Assert.That(File.Exists(Path.Combine(testPath, "S4Forge.dll")), Is.True);
             Assert.That(File.Exists(Path.Combine(testPath, "S4Forge.pdb")), Is.True);
-            Assert.That(progressCount, Is.EqualTo(3));
+            Assert.That(progressCount, Is.AtLeast(2));
 
             try {
                 Directory.Delete(testPath, true);

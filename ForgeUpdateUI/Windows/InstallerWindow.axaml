@@ -1,0 +1,75 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="475" d:DesignHeight="500"
+        CanResize="False" Width="475" Height="500"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="65"
+        WindowStartupLocation="CenterOwner"
+        x:Class="ForgeUpdateUI.InstallerWindow"
+        Title="InstallerWindow">
+    <StackPanel Margin="35 0">
+        <!--Header-->
+        <StackPanel Margin="0 0 0 0" IsHitTestVisible="False" HorizontalAlignment="Center" Height="75" Orientation="Vertical">
+            <TextBlock TextAlignment="Center" FontSize="25" FontWeight="Black" Margin="0 10"
+                       Text="Forge Updater"/>
+            <TextBlock TextAlignment="Center" Margin="0 -10 0 0" FontWeight="Regular" FontSize="15" Foreground="#546272" FontStretch="ExtraCondensed"
+                       Text="Installing Settlers 4 Reforged"/>
+
+            <Border Background="#f3f2f5" Height="2" Width="455" Margin="0 10 0 0"/>
+        </StackPanel>
+
+        <StackPanel Height="372" Width="450">
+            <TextBlock Margin="5 10" TextWrapping="Wrap">
+                This installer will install Settlers 4 Reforged to your local Settlers 4 History Edition installation
+                <LineBreak/>
+                The installation will download the latest Reforged version known to this installer
+                <LineBreak/>
+                <Span FontSize="13" FontWeight="SemiLight" FontStyle="Italic">
+                    Please make sure that you have a valid installation of Settlers 4 History Edition via Ubisoft Connect.
+                    Also make sure that you have enough disk space available for the installation (approx. 350MiB).
+                </Span>
+            </TextBlock>
+
+            <Border Background="#f3f2f5" Height="2" Width="455" Margin="0 5 0 10"/>
+
+            <Label FontWeight="Bold" FontSize="14" FontStretch="Condensed">Installer Version:</Label>
+            <TextBlock Name="InstallerVersion" FontSize="12" FontFamily="{StaticResource CodeFont}" Margin="5 0">
+                0.0.0.0
+            </TextBlock>
+            
+            <Label FontWeight="Bold" FontSize="14" FontStretch="Condensed">Detected Settlers 4 installation at:</Label>
+            <TextBlock Name="InstallationPath" TextWrapping="WrapWithOverflow" TextTrimming="" Margin="5 0" Foreground="#546272" FontSize="12" FontStretch="ExtraCondensed">K:/Projekte/Siedler4/S4ModdingFramework/S4ForgeUpdater/ForgeUpdaterTests/Fixture/Files/S4Forge</TextBlock>
+            <TextBlock Name="InstallationPathFailed" Foreground="LightCoral" TextWrapping="WrapWithOverflow" TextTrimming="" Margin="5 0" FontSize="12" FontStretch="ExtraCondensed">
+                Failed to detect Settlers 4 History Edition installation path.
+                <LineBreak/>
+                Reinstall Settlers 4 History Edition with Ubisoft Connect and try again.
+                <LineBreak/>
+                <Span FontFamily="{StaticResource CodeFont}"  FontWeight="Bold">Cause:</Span>
+                <LineBreak/>
+                <Run  FontSize="11" FontFamily="{StaticResource CodeFont}" FontStretch="ExtraCondensed" Name="InstallationPathFailedCause">Unknown!</Run>
+            </TextBlock>
+
+
+        </StackPanel>
+
+
+        <Border Background="#f3f2f5" Height="2" Width="455" Margin="0 0 0 10"/>
+        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Spacing="15">
+
+            <Button Click="CloseWindow" Background="LightCoral" Content="Close" HorizontalAlignment="Right">
+                <Button.Styles>
+                    <Style>
+                        <Style.Resources>
+                            <SolidColorBrush x:Key="ButtonBackgroundPointerOver">#E07070</SolidColorBrush>
+                            <SolidColorBrush x:Key="ButtonBackgroundPressed">#A05050</SolidColorBrush>
+                        </Style.Resources>
+                    </Style>
+                </Button.Styles>
+            </Button>
+            <Button Name="StartInstallButton" Click="StartInstall" Content="Install" HorizontalAlignment="Right"></Button>
+        </StackPanel>
+    </StackPanel>
+</Window>
