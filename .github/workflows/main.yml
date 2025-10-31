@@ -1,0 +1,13 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release-package:
+    uses: Settlers4-Reforged/S4Forge.SDK/.github/workflows/release-workflow.yml@main
+    with:
+      package_folder: ForgeUpdateUI
+    secrets: inherit
