@@ -46,10 +46,9 @@ namespace ForgeUpdater.Updater {
 
             Task<string> downloadedZipTask = downloader.Download();
 
-            CancellationTokenSource cts = new CancellationTokenSource();
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             downloadedZipTask.ContinueWith((_) => {
-                cts.Cancel();
+                progress.Writer.Complete();
             });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
@@ -57,8 +56,8 @@ namespace ForgeUpdater.Updater {
                 float progressPercentage = 1;
 
                 try {
-                    progressPercentage = await progress.Reader.ReadAsync(cts.Token);
-                } catch (OperationCanceledException) { }
+                    progressPercentage = await progress.Reader.ReadAsync();
+                } catch (ChannelClosedException) { }
 
                 yield return $"Download: {progressPercentage:P}";
             }

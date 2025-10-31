@@ -64,6 +64,9 @@ namespace ForgeUpdater.Updater {
             // Make a HEAD request to the server to check if the delta patch is available.
             HttpClient client = new HttpClient();
             HttpResponseMessage response = client.SendAsync(new HttpRequestMessage(HttpMethod.Head, new Uri(DeltaPatchURI))).Result;
+            if (!response.IsSuccessStatusCode)
+                UpdaterLogger.LogWarn("Delta patch was set for {0} but not found at {1} (HTTP {2})", Name, DeltaPatchURI, (int)response.StatusCode);
+
             return response.IsSuccessStatusCode;
         }
 
@@ -77,9 +80,17 @@ namespace ForgeUpdater.Updater {
             string finalZipPath = TargetZipPath;
             bool deltaPatch = false;
             if (CanDeltaPatch && IsDeltaPatchAvailable()) {
+                UpdaterLogger.LogInfo("Delta patch available for {0}, downloading delta patch from {1}", Name, DeltaPatchURI!);
                 finalDownloadUri = DeltaPatchURI ?? throw new ArgumentNullException(nameof(DeltaPatchURI), "Delta patch URI is null");
                 finalZipPath = TargetDeltaPatchPath;
                 deltaPatch = true;
+            }
+
+            try {
+                Directory.CreateDirectory(Path.GetDirectoryName(finalZipPath)!);
+            } catch (Exception e) {
+                UpdaterLogger.LogError(e, "Failed to create download directory at '{0}'", Path.GetDirectoryName(finalZipPath) ?? "--");
+                throw;
             }
 
             IDownload download = DownloadBuilder.New()
@@ -164,6 +175,8 @@ namespace ForgeUpdater.Updater {
                 File.Delete(intermediatePatchZipName);
 
             try {
+                Directory.CreateDirectory(Path.GetDirectoryName(intermediatePatchZipName)!);
+
                 File.Move(DeltaSourceZipPath, intermediatePatchZipName);
 
                 string finalZipPath = DeltaSourceZipPath;
