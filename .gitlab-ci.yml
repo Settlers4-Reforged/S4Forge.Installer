@@ -1,8 +1,0 @@
-include:
-  - project: 's4-plugins/modapi/packages'
-    ref: main
-    file: '/shared.gitlab-ci.yml'
-
-variables:
-  PACKAGE_NAME: ForgeSDK
-  PACKAGE_FOLDER: ForgeSDK

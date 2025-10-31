@@ -32,7 +32,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ForgeUpdater.csproj" />
+        <ProjectReference Include="..\ForgeUpdater\ForgeUpdater.csproj" />
     </ItemGroup>
     
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">

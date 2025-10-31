@@ -41,7 +41,10 @@
             </TextBlock>
             
             <Label FontWeight="Bold" FontSize="14" FontStretch="Condensed">Detected Settlers 4 installation at:</Label>
-            <TextBlock Name="InstallationPath" TextWrapping="WrapWithOverflow" TextTrimming="" Margin="5 0" Foreground="#546272" FontSize="12" FontStretch="ExtraCondensed">K:/Projekte/Siedler4/S4ModdingFramework/S4ForgeUpdater/ForgeUpdaterTests/Fixture/Files/S4Forge</TextBlock>
+            <StackPanel Orientation="Horizontal">
+                <TextBox TextChanged="PathChanged" Width="410" HorizontalAlignment="Stretch"  Watermark="Settlers 4 installation path" Name="InstallationPath" TextWrapping="WrapWithOverflow" Margin="5 0" Foreground="#546272" FontSize="12" FontStretch="ExtraCondensed"></TextBox>
+                <Button Name="ChangePathButton" Click="ChangePath" Content="..." HorizontalAlignment="Right" Margin="0 0 0 0" Width="30"></Button>
+            </StackPanel>
             <TextBlock Name="InstallationPathFailed" Foreground="LightCoral" TextWrapping="WrapWithOverflow" TextTrimming="" Margin="5 0" FontSize="12" FontStretch="ExtraCondensed">
                 Failed to detect Settlers 4 History Edition installation path.
                 <LineBreak/>

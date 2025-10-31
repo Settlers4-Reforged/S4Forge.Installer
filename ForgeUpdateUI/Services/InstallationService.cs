@@ -43,12 +43,33 @@ namespace ForgeUpdateUI.Services {
                     this.logger.LogError(ex, "Failed to find S4 path in registry at {0}", REG_KEY);
                     return (string.Empty, ex);
                 }
+
+                bool valid = ValidateS4Path(s4Path, out string? validationError);
+                if (!valid) {
+                    Exception ex = new Exception($"The S4 path found in registry is not valid: {validationError}");
+                    this.logger.LogError(ex, "The S4 path found in registry is not valid: {0}", validationError);
+                    return (string.Empty, ex);
+                }
+
                 return (s4Path, null);
             } catch (Exception ex) {
                 this.logger.LogError(ex, "Failed to read S4 path from registry");
                 SentrySdk.CaptureException(ex);
                 return (string.Empty, ex);
             }
+        }
+
+        public bool ValidateS4Path(string path, out string error) {
+            if (!Directory.Exists(path)) {
+                error = "The specified path does not exist.";
+                return false;
+            }
+            if (!File.Exists(Path.Combine(path, "S4_Main.exe"))) {
+                error = "The specified path does not contain Settlers 4.\nNo S4_Main.exe was found!";
+                return false;
+            }
+            error = string.Empty;
+            return true;
         }
     }
 }
