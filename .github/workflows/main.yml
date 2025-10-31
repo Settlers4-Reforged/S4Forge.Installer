@@ -6,6 +6,12 @@ on:
       - '*'
 
 jobs:
+  publish-package:
+    uses: Settlers4-Reforged/S4Forge.SDK/.github/workflows/publish-workflow.yml@main
+    with:
+      package_folder: ForgeUpdater
+      package_name: S4Forge.Updater
+    secrets: inherit
   release-package:
     uses: Settlers4-Reforged/S4Forge.SDK/.github/workflows/release-workflow.yml@main
     with:

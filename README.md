@@ -1,20 +1,12 @@
-# S4Forge.SDK
+# S4Forge.Installer
 
-The S4Forge.SDK is a C# library designed to facilitate the development of applications that interact with the S4Forge platform. It provides a set of APIs and tools to streamline the process of building, testing, and deploying modules (mods) for Settlers 4 using S4Forge,
+This repository contains both the installer/updater application for S4Forge modules as well as the library that can be used to integrate the installation and updating process into other applications.
 
-The SDK consists of three main components:
+ForgeUpdater is the shared library providing the core functionality.
 
-1. **S4Forge.SDK**: The SDK library itself that provides MSBuild targets that help with building and packaging modules.
-2. **ForgeUpdater**: A library that provides functionality for updating modules. It includes features for checking for updates, downloading new versions, and applying updates to existing modules.
-3. **ForgeUpdateUI**: A tool that uses the Updater library to download and manage updates for modules and forge itself.
+ForgeUpdaterUI takes that library and wraps it into an application that both serves as installer and updater for Settlers4-Reforged.
 
-## SDK
-
-The SDK itself is documented in the [S4Forge.SDK folder](https://github.com/Settlers4-Reforged/S4Forge.SDK/blob/main/ForgeSDK/README.md).
-
-## ForgeUpdater
-
-### Installation and updating process
+## Installation and updating process
 
 There are two parts to how ForgeUpdater works:
 
@@ -25,7 +17,7 @@ There are two parts to how ForgeUpdater works:
 
 You can think of a installation config file as a list of modules that you want to install.
 
-#### Manifest file
+### Manifest file
 
 The manifest file is a JSON file that describes a module, its dependencies, and other metadata.
 You don't have to create this file manually, the SDK provides MSBuild targets to generate it for you. Just add a `<PackageReference Include="S4Forge.SDK" Version="*" PrivateAssets="all" />` to your project file and the SDK will automatically generate a `manifest.json` file in the output directory when you build your project (When you have the `Embedded` flag not set/set to false).
@@ -76,7 +68,7 @@ An example `manifest.json` looks as follows:
 
 > For an up to date explanation on what each field actually does and what other, not here shown fields do, check out the [Manifest class description](https://github.com/Settlers4-Reforged/S4Forge.SDK/blob/main/Manifests/Manifest.cs)
 
-#### Installation config file
+### Installation config file
 
 The installation config file is a JSON file that describes the installation paths and the modules to be installed. It contains a list of modules, each with its own manifest URL or local path.
 This file is used to describe a "desired" state of a Forge installation.

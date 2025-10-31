@@ -8,17 +8,24 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
-    <ItemGroup>
-        <Compile Remove="ForgeSDK\**" />
-        <Compile Remove="ForgeUpdaterTests\**" />
-        <Compile Remove="ForgeUpdateUI\**" />
-        <EmbeddedResource Remove="ForgeSDK\**" />
-        <EmbeddedResource Remove="ForgeUpdaterTests\**" />
-        <EmbeddedResource Remove="ForgeUpdateUI\**" />
-        <None Remove="ForgeSDK\**" />
-        <None Remove="ForgeUpdaterTests\**" />
-        <None Remove="ForgeUpdateUI\**" />
-    </ItemGroup>
+    <PropertyGroup>
+        <!--NuGet Package settings:-->
+        <Title>S4Forge Updater</Title>
+        <PackageId>S4Forge.Updater</PackageId>
+        <Authors>WizzardMaker</Authors>
+        <Description>
+            Library for updating S4Forge and its components, used by the S4Forge Installer.
+        </Description>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PackageOutputPath>$(SolutionDir)BUILD\NuGet\</PackageOutputPath>
+        <FileVersion>$(AssemblyVersion)</FileVersion>
+        <Version>$(AssemblyVersion)</Version>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+
+        <RepositoryUrl>https://github.com/Settlers-4-Reforged/S4Forge.Installer</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Octopus.Octodiff" Version="2.0.548" />
