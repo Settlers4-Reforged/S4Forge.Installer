@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>.net8.0-windows7.0</TargetFramework>
         <Nullable>enable</Nullable>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -17,8 +17,38 @@
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.6" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.9" />
-        <PackageReference Include="Sentry" Version="5.16.0" />
         <PackageReference Include="System.Reactive" Version="6.0.2" />
+
+        <PackageReference Include="Sentry" Version="5.16.0" />
+        <PackageReference Include="S4Forge.SDK" Version="0.5.*" PrivateAssets="all" />
+    </ItemGroup>
+
+    
+    <!-- Forge Build System: -->
+    <PropertyGroup>
+        <ProjectType>Forge</ProjectType>
+        <ExportToS4>false</ExportToS4>
+    </PropertyGroup>
+
+    <!--Forge Manifest System: -->
+    <PropertyGroup>
+        <ManifestId>S4Forge.Installer</ManifestId>
+        <ManifestName>S4Forge Installer</ManifestName>
+        <ManifestType>$(ProjectType)</ManifestType>
+        <ManifestClearResidualFiles>false</ManifestClearResidualFiles>
+        <ManifestEmbedded>true</ManifestEmbedded>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- As we want to install to Forge/Installer, remove default reference and add all output files -->
+        <ExportFile Remove="$(TargetPath)"></ExportFile>
+        <ExportFile Include="$(TargetDir)/**">
+            <ExportFileDir>/Installer/</ExportFileDir>
+        </ExportFile>
+        <!-- Remove any not needed files, to reduce bloat -->
+        <ExportFile Remove="$(TargetDir)/*.pdb"></ExportFile>
+        <ExportFile Remove="$(TargetDir)/runtimes/linux-*/**"></ExportFile>
+        <ExportFile Remove="$(TargetDir)/runtimes/osx*/**"></ExportFile>
     </ItemGroup>
 
     <ItemGroup>
@@ -30,10 +60,19 @@
         <Folder Include="Assets\Fonts\" />
         <AvaloniaResource Include="Assets\**" />
     </ItemGroup>
-
-    <ItemGroup>
+    
+    <Choose>
+        <When Condition="'$(SolutionName)'=='S4ModdingFramework'">
+            <ItemGroup>
         <ProjectReference Include="..\ForgeUpdater\ForgeUpdater.csproj" />
-    </ItemGroup>
+            </ItemGroup>
+        </When>
+        <Otherwise>
+            <ItemGroup>
+                <PackageReference Include="S4Forge.Updater" Version="0.6.*" />
+            </ItemGroup>
+        </Otherwise>
+    </Choose>
     
     <PropertyGroup Condition="'$(Configuration)' == 'Release'">
         <!-- Configure Sentry org and project -->

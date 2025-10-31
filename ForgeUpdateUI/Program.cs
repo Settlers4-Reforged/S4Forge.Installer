@@ -30,7 +30,7 @@ namespace ForgeUpdateUI {
         }
 
         private static void InitSentry() {
-#if DEBUG
+#if !DEBUG
             SentrySdk.Init(options => {
                 options.Dsn = "https://4de1b5b092f6f6d2cb26487f3a10c32c@o4509373324918784.ingest.de.sentry.io/4509378699919440";
                 options.AutoSessionTracking = true;

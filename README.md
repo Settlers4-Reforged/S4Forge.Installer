@@ -2,9 +2,9 @@
 
 This repository contains both the installer/updater application for S4Forge modules as well as the library that can be used to integrate the installation and updating process into other applications.
 
-ForgeUpdater is the shared library providing the core functionality.
+ForgeUpdater is the shared library providing the core functionality. It's shared via NuGet as `S4Forge.Updater` package.
 
-ForgeUpdaterUI takes that library and wraps it into an application that both serves as installer and updater for Settlers4-Reforged.
+ForgeUpdaterUI takes that library and wraps it into an application that both serves as installer and updater for Settlers4-Reforged. You can download the latest updater version from the releases section. It's pre-configured with the Settlers4-Reforged installation config.
 
 ## Installation and updating process
 
@@ -16,6 +16,12 @@ There are two parts to how ForgeUpdater works:
 > The word "download" is mentioned here, but ForgeUpdater also works with local files, so you can also use it to update modules that are not hosted on the internet.
 
 You can think of a installation config file as a list of modules that you want to install.
+
+ForgeUpdaterUI works in two different modes: installation mode and update mode.
+- In installation mode, it reads the installation config file, downloads the manifests for each module, and installs them into the specified paths.
+- In update mode, it checks the local installation against the installation config file, downloads any new manifests + modules, and updates the modules as necessary.
+
+The installation mode is the default startup mode. If ForgeUpdaterUI is started with the `--update` command line argument, it will start in update mode.
 
 ### Manifest file
 
