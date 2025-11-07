@@ -161,59 +161,10 @@ namespace ForgeUpdater {
                     }
 
                     try {
-                        UpdaterLogger.LogDebug("Searching for manifest in assembly: {0}", file);
-
-                        using Stream fileStream = File.OpenRead(file);
-
-                        using PEReader per = new PEReader(fileStream);
-                        MetadataReader mr;
-                        try {
-                            mr = per.GetMetadataReader();
-
-                        } catch (Exception) {
-                            UpdaterLogger.LogDebug("Not a dll with metadata in {0}", file);
-                            continue;
-                        }
-
-                        CorHeader? peHeadersCorHeader = per.PEHeaders.CorHeader;
-                        if (peHeadersCorHeader == null) {
-                            // Not a .NET assembly with manifest metadata
-                            UpdaterLogger.LogDebug("No .NET manifest data in {0}", file);
-                            continue;
-                        }
-
-                        byte[]? manifestData = null;
-                        foreach (var resHandle in mr.ManifestResources) {
-                            ManifestResource res = mr.GetManifestResource(resHandle);
-                            if (!mr.StringComparer.Equals(res.Name, "manifest.json"))
-                                continue;
-
-                            PEMemoryBlock resourceDirectory = per.GetSectionData(peHeadersCorHeader.ResourcesDirectory.RelativeVirtualAddress);
-                            BlobReader reader = resourceDirectory.GetReader(
-                                (int)res.Offset,
-                                resourceDirectory.Length - (int)res.Offset);
-
-                            uint size = reader.ReadUInt32();
-                            manifestData = reader.ReadBytes((int)size);
-                            break;
-                        }
-
-                        if (manifestData == null) {
-                            UpdaterLogger.LogDebug("No manifest found in {0}", file);
-                            continue;
-                        }
-
-                        TManifest? manifest = JsonSerializer.Deserialize<TManifest>(manifestData);
-
-                        if (manifest == null) {
-                            UpdaterLogger.LogError(null, "Failed to parse manifest at {0}", file);
-                            continue;
-                        }
-
-                        UpdaterLogger.LogDebug("Found manifest {0}@{1} in assembly {2}", manifest.Id, manifest.Version, file);
-
-                        manifest.Embedded = true;
-                        manifests.Add(manifest);
+                        ManifestReader<TManifest> reader = new ManifestReader<TManifest>(file);
+                        TManifest? manifest = reader.ReadEmbeddedManifest();
+                        if (manifest != null)
+                            manifests.Add(manifest);
                     } catch (JsonException e) {
                         UpdaterLogger.LogError(e, "Failed to parse manifest at {0}", file);
                     } catch (Exception e) {

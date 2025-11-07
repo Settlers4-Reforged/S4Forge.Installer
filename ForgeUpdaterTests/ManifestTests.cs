@@ -1,4 +1,5 @@
-﻿using ForgeUpdater.Manifests;
+﻿using ForgeUpdater;
+using ForgeUpdater.Manifests;
 
 using System;
 using System.Collections.Generic;
@@ -11,9 +12,18 @@ using System.Threading.Tasks;
 namespace ForgeUpdaterTests {
     public class ManifestTests {
 
-        [Test]
-        public void ParseFromJsonTest() {
+        [SetUp]
+        public void Setup() {
+            UpdaterLogger.Logger = new ConsoleLogger();
+        }
 
+        [Test]
+        public void ReadFromAssemblyFile() {
+            string testFile = Path.Join(Environment.CurrentDirectory, "Fixture/Files/ManifestTest/S4ModApi.dll");
+            Manifest? manifest = null;
+            ManifestReader<Manifest> reader = new ManifestReader<Manifest>(testFile);
+            Assert.DoesNotThrow(() => { manifest = reader.ReadManifest(); });
+            Assert.That(manifest, Is.Not.Null);
         }
 
         [Test]

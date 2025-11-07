@@ -34,6 +34,9 @@
     </ItemGroup>
 
     <ItemGroup>
+        <None Update="Fixture\Files\ManifestTest\S4ModApi.dll">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
         <None Update="Fixture\Zips\S4Forge.1.0.0.zip">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
